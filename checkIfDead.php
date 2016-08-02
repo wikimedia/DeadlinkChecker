@@ -18,7 +18,7 @@ class checkIfDead {
 	 * @param $url string URL to check
 	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive)
 	 */
-	public function isLinkDead( $url ) {
+	public function checkDeadlink( $url ) {
 		$ch = curl_init();
 		curl_setopt_array( $ch, $this->getCurlOptions( $url, true, true ) );
 		curl_exec( $ch );
@@ -32,7 +32,7 @@ class checkIfDead {
 		];
 		$deadVal = $this->processResult( $curlInfo );
 		// If processresult gives us back a NULL, we assume it's dead
-		if ( $deadVal !== false && $deadVal == null ) {
+		if ( is_null( $deadVal ) ) {
 			$deadVal = true;
 		}
 		$result = ['result' => $deadVal, 'error' => $error];
@@ -40,9 +40,9 @@ class checkIfDead {
 	}
 
 	/**
-	 * Check an array of dead links
+	 * Check an array of links
 	 *
-	 * @param string $url URL we are checking
+	 * @param string $urls array of URLs we are checking
 	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive) for each element
 	 */
 	public function checkDeadlinks( $urls ) {
@@ -129,6 +129,7 @@ class checkIfDead {
 	 * Perform a complete text request, not just for headers
 	 *
 	 * @param array $urls URLs we are checking
+	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive) for each element
 	 */
 	protected function performFullRequest( $urls ) {
 		// Create multiple curl handle

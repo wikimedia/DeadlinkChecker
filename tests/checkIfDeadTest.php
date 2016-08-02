@@ -9,7 +9,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 	public function testDeadlinkTrue() {
 		$obj = new checkIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
-		$result = $obj->isLinkDead( $url );
+		$result = $obj->checkDeadlink( $url );
 		$this->assertEquals( true, $result['result'] );
 	}
 
@@ -19,7 +19,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 	public function testDeadlinkFalse() {
 		$obj = new checkIfDead();
 		$url = 'https://en.wikipedia.org';
-		$result = $obj->isLinkDead( $url );
+		$result = $obj->checkDeadlink( $url );
 		$this->assertEquals( false, $result['result'] );
 	}
 
