@@ -1,5 +1,5 @@
 <?php
-require_once dirname( __FILE__ ) . '/../checkIfDead.php';
+require_once dirname( __FILE__ ) . '/../src/checkIfDead.php';
 
 class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 
@@ -10,7 +10,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 		$obj = new checkIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
 		$result = $obj->checkDeadlink( $url );
-		$this->assertEquals( true, $result['result'] );
+		$this->assertEquals( true, $result['dead'] );
 	}
 
 	/**
@@ -20,7 +20,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 		$obj = new checkIfDead();
 		$url = 'https://en.wikipedia.org';
 		$result = $obj->checkDeadlink( $url );
-		$this->assertEquals( false, $result['result'] );
+		$this->assertEquals( false, $result['dead'] );
 	}
 
 	/**
@@ -36,7 +36,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 		];
 		$result = $obj->checkDeadlinks( $urls );
 		$expected = [true, true, true, true];
-		$this->assertEquals( $expected, $result['results'] );
+		$this->assertEquals( $expected, $result['dead'] );
 	}
 
 	/**
@@ -56,7 +56,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 		];
 		$result = $obj->checkDeadlinks( $urls );
 		$expected = [false, false, false, false, false, false, false, false];
-		$this->assertEquals( $expected, $result['results'] );
+		$this->assertEquals( $expected, $result['dead'] );
 	}
 
 	/**
