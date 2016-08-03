@@ -10,24 +10,24 @@ class checkIfDead {
 	/*
 	 * UserAgent for the device/browser we are pretending to be
 	 */
-	const UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
+	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
 
 	/**
 	 *  HTTP codes that do not indicate a dead link
 	 */
-	const goodHttpCodes = [100, 101, 102, 200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 300,
-						   301, 302, 303, 304, 305, 306, 307, 308, 103];
+	protected $goodHttpCodes = [100, 101, 102, 200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 300,
+								301, 302, 303, 304, 305, 306, 307, 308, 103];
 
 	/**
 	 * FTP codes that do not indicate a dead link
 	 */
-	const goodFtpCodes = [100, 110, 120, 125, 150, 200, 202, 211, 212, 213, 214, 215, 220, 221, 225, 226,
-						  227, 228, 229, 230, 231, 232, 234, 250, 257, 300, 331, 332, 350, 600, 631, 633];
+	protected $goodFtpCodes = [100, 110, 120, 125, 150, 200, 202, 211, 212, 213, 214, 215, 220, 221, 225, 226,
+							   227, 228, 229, 230, 231, 232, 234, 250, 257, 300, 331, 332, 350, 600, 631, 633];
 
 	/**
 	 * Curl error codes that are problematic and the link should be considered dead
 	 */
-	const curlErrorCodes = [3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47, 51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87];
+	protected $curlErrorCodes = [3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47, 51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87];
 
 	/**
 	 * Check if a single URL is dead by performing a full text curl
@@ -231,8 +231,7 @@ class checkIfDead {
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_TIMEOUT => 30,
-			CURLOPT_USERAGENT => self::UserAgent
-		];
+			CURLOPT_USERAGENT => $this->userAgent;
 		if ( $ftp ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
@@ -304,14 +303,14 @@ class checkIfDead {
 			}
 		}
 		//If there was an error during the CURL process, check if the code returned is a server side problem
-		if ( in_array( $curlInfo['curl_error'], self::curlErrorCodes ) ) {
+		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
 			return true;
 		}
 		//Check for valid non-error codes for HTTP or FTP
-		if ( $method == "HTTP" && !in_array( $httpCode, self::goodHttpCodes ) ) {
+		if ( $method == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			return true;
 			//Check for valid non-error codes for FTP
-		} elseif ( $method == "FTP" && !in_array( $httpCode, self::goodFtpCodes ) ) {
+		} elseif ( $method == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			return true;
 		}
 		//Yay, the checks passed, and the site is alive.
