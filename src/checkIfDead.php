@@ -13,6 +13,23 @@ class checkIfDead {
 	const UserAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
 
 	/**
+	 *  HTTP codes that do not indicate a dead link
+	 */
+	const goodHttpCodes = [100, 101, 102, 200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 300,
+						   301, 302, 303, 304, 305, 306, 307, 308, 103];
+
+	/**
+	 * FTP codes that do not indicate a dead link
+	 */
+	const goodFtpCodes = [100, 110, 120, 125, 150, 200, 202, 211, 212, 213, 214, 215, 220, 221, 225, 226,
+						  227, 228, 229, 230, 231, 232, 234, 250, 257, 300, 331, 332, 350, 600, 631, 633];
+
+	/**
+	 * Curl error codes that are problematic and the link should be considered dead
+	 */
+	const curlErrorCodes = [3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47, 51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87];
+
+	/**
 	 * Check if a single URL is dead by performing a full text curl
 	 *
 	 * @param $url string URL to check
@@ -35,7 +52,7 @@ class checkIfDead {
 		if ( is_null( $deadVal ) ) {
 			$deadVal = true;
 		}
-		$result = ['result' => $deadVal, 'error' => $error];
+		$result = ['dead' => $deadVal, 'error' => $error];
 		return $result;
 	}
 
@@ -55,8 +72,8 @@ class checkIfDead {
 		}
 		$curl_instances = [];
 		$returnArray = [
-			'results' => [],
-			'errors' => []
+			'dead' => [],
+			'error' => []
 		];
 		foreach ( $urls as $id => $url ) {
 			$curl_instances[$id] = curl_init();
@@ -105,9 +122,9 @@ class checkIfDead {
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
 			// Deduce whether the site is dead or alive
-			$returnArray['results'][$id] = $this->processResult( $curlInfo );
+			$returnArray['dead'][$id] = $this->processResult( $curlInfo );
 			// If we got back a null, we should do a full request
-			if ( is_null( $returnArray['results'][$id] ) ) {
+			if ( is_null( $returnArray['dead'][$id] ) ) {
 				$fullCheckURLs[$id] = $url;
 			}
 		}
@@ -117,9 +134,9 @@ class checkIfDead {
 		if ( !empty( $fullCheckURLs ) ) {
 			$results = $this->performFullRequest( $fullCheckURLs );
 			// Merge back results from full request into our $returnArray
-			foreach ( $results['results'] as $id => $result ) {
-				$returnArray['results'][$id] = $this->processResult( $result );;
-				$returnArray['errors'][$id] = $results['errors'][$id];
+			foreach ( $results['dead'] as $id => $result ) {
+				$returnArray['dead'][$id] = $this->processResult( $result );;
+				$returnArray['error'][$id] = $results['error'][$id];
 			}
 		}
 		return $returnArray;
@@ -139,8 +156,8 @@ class checkIfDead {
 		}
 		$curl_instances = [];
 		$returnArray = [
-			'results' => [],
-			'errors' => []
+			'dead' => [],
+			'error' => []
 		];
 		foreach ( $urls as $id => $url ) {
 			$curl_instances[$id] = curl_init();
@@ -177,7 +194,7 @@ class checkIfDead {
 		}
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
-			$returnArray['errors'][$id] = curl_error( $curl_instances[$id] );
+			$returnArray['error'][$id] = curl_error( $curl_instances[$id] );
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
@@ -188,10 +205,10 @@ class checkIfDead {
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
-			$returnArray['results'][$id] = $this->processResult( $curlInfo );
+			$returnArray['dead'][$id] = $this->processResult( $curlInfo );
 			// If we get back a null with full request too, we mark it as a dead link to be on the safe side
-			if ( is_null( $returnArray['results'][$id] ) ) {
-				$returnArray['results'][$id] = true;
+			if ( is_null( $returnArray['dead'][$id] ) ) {
+				$returnArray['dead'][$id] = true;
 			}
 		}
 		// Close resource
@@ -246,35 +263,6 @@ class checkIfDead {
 	}
 
 	/**
-	 * Get curl error codes that are problematic and the link should be considered dead
-	 *
-	 * @return array True error codes
-	 */
-	public function getCurlErrorCodes() {
-		return [3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47, 51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87];
-	}
-
-	/**
-	 * HTTP codes that do not indicate a dead link
-	 *
-	 * @return array
-	 */
-	public function getNonBadHttpCodes() {
-		return [100, 101, 102, 200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 300, 301, 302,
-				303, 304, 305, 306, 307, 308, 103];
-	}
-
-	/**
-	 * FTP codes that do not indicate a dead link
-	 *
-	 * @return array
-	 */
-	public function getNonBadFtpCodes() {
-		return [100, 110, 120, 125, 150, 200, 202, 211, 212, 213, 214, 215, 220, 221, 225, 226,
-				227, 228, 229, 230, 231, 232, 234, 250, 257, 300, 331, 332, 350, 600, 631, 633];
-	}
-
-	/**
 	 * Process the returned headers
 	 *
 	 * @param array $headers Returned headers
@@ -285,12 +273,6 @@ class checkIfDead {
 	protected function processResult( $curlInfo ) {
 		//Determine if we are using FTP or HTTP
 		$method = $this->getRequestType( $curlInfo['url'] );
-		//Possible curl error numbers that can indicate a server failure, and conversly, a badlink
-		$curlerrors = $this->getCurlErrorCodes();
-		//Official HTTP codes that aren't an indication of errors.
-		$httpCodes = $this->getNonBadHttpCodes();
-		//FTP codes that aren't an indication of errors.
-		$ftpCodes = $this->getNonBadFtpCodes();
 		// Get HTTP code returned
 		$httpCode = $curlInfo['http_code'];
 		// Get final URL
@@ -300,7 +282,8 @@ class checkIfDead {
 		// Get an array of possible root urls
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
-			// Perform a GET request because some servers don't support HEAD requests
+			// Some servers don't support NOBODY requests, so if an HTTP error code is returned,
+			// we check the URL again with a full page request
 			return null;
 		}
 		// Check for error messages in redirected URL string
@@ -321,14 +304,14 @@ class checkIfDead {
 			}
 		}
 		//If there was an error during the CURL process, check if the code returned is a server side problem
-		if ( in_array( $curlInfo['curl_error'], $curlerrors ) ) {
+		if ( in_array( $curlInfo['curl_error'], self::curlErrorCodes ) ) {
 			return true;
 		}
 		//Check for valid non-error codes for HTTP or FTP
-		if ( $method == "HTTP" && !in_array( $httpCode, $httpCodes ) ) {
+		if ( $method == "HTTP" && !in_array( $httpCode, self::goodHttpCodes ) ) {
 			return true;
 			//Check for valid non-error codes for FTP
-		} elseif ( $method == "FTP" && !in_array( $httpCode, $ftpCodes ) ) {
+		} elseif ( $method == "FTP" && !in_array( $httpCode, self::goodFtpCodes ) ) {
 			return true;
 		}
 		//Yay, the checks passed, and the site is alive.
