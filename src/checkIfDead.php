@@ -59,7 +59,7 @@ class checkIfDead {
 	/**
 	 * Check an array of links
 	 *
-	 * @param string $urls array of URLs we are checking
+	 * @param array $urls of URLs we are checking
 	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive) for each element
 	 */
 	public function checkDeadlinks( $urls ) {
@@ -231,7 +231,8 @@ class checkIfDead {
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_TIMEOUT => 30,
-			CURLOPT_USERAGENT => $this->userAgent;
+			CURLOPT_USERAGENT => $this->userAgent
+		];
 		if ( $ftp ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
@@ -264,9 +265,7 @@ class checkIfDead {
 	/**
 	 * Process the returned headers
 	 *
-	 * @param array $headers Returned headers
-	 * @param array $curlerrno Error number
-	 * @param array $url Url checked for
+	 * @param array $curlInfo with values: Returned headers, Error number, Url checked for
 	 * @return bool true if dead; false if not
 	 */
 	protected function processResult( $curlInfo ) {
