@@ -5,7 +5,7 @@ Sample usage:
 $obj = new checkIfDead();
 $url = 'https://en.wikipedia.org';
 $exec = $obj->checkDeadlink( $url );
-$result = $exec['dead']; // true/false
+$dead = $exec['dead']; // true/false
 $error = $exec['error'];   // Error code we got back from curl, if any
 ```
 
