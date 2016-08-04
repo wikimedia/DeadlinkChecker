@@ -1,7 +1,7 @@
 {
   "name": "Niharika29/DeadlinkChecker",
   "autoload": {
-    "psr-0": {
+    "psr-4": {
       "Deadlink\\Checker\\": "src/"
     }
   },
