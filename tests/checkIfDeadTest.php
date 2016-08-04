@@ -1,13 +1,14 @@
 <?php
-require_once dirname( __FILE__ ) . '/../src/checkIfDead.php';
+require_once dirname( __FILE__ ) . '/../src/CheckIfDead.php';
+use Wikimedia\DeadlinkChecker\CheckIfDead;
 
-class checkIfDeadTest extends PHPUnit_Framework_TestCase {
+class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 
 	/**
 	 * Test a single dead link
 	 */
 	public function testDeadlinkTrue() {
-		$obj = new checkIfDead();
+		$obj = new CheckIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
 		$result = $obj->checkDeadlink( $url );
 		$this->assertEquals( true, $result['dead'] );
@@ -17,7 +18,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * Test a single live link
 	 */
 	public function testDeadlinkFalse() {
-		$obj = new checkIfDead();
+		$obj = new CheckIfDead();
 		$url = 'https://en.wikipedia.org';
 		$result = $obj->checkDeadlink( $url );
 		$this->assertEquals( false, $result['dead'] );
@@ -27,7 +28,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * Test an array of dead links
 	 */
 	public function testDeadlinksTrue() {
-		$obj = new checkIfDead();
+		$obj = new CheckIfDead();
 		$urls = [
 			'https://en.wikipedia.org/nothing',
 			'http://www.copart.co.uk/c2/specialSearch.html?_eventId=getLot&execution=e1s2&lotId=10543580',
@@ -43,7 +44,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * Test an array of live links
 	 */
 	public function testDeadlinksFalse() {
-		$obj = new checkIfDead();
+		$obj = new CheckIfDead();
 		$urls = [
 			'https://en.wikipedia.org/wiki/Main_Page',
 			'https://en.wikipedia.org/w/index.php?title=Republic_of_India',
@@ -63,7 +64,7 @@ class checkIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * Test the URL cleaning function
 	 */
 	public function testCleanUrl() {
-		$obj = new checkIfDead();
+		$obj = new CheckIfDead();
 		// workaround to make private function testable
 		$reflection = new \ReflectionClass( get_class( $obj ) );
 		$method = $reflection->getMethod( 'cleanUrl' );

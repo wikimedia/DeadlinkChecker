@@ -1,11 +1,12 @@
 <?php
-
 /**
  * Copyright (c) 2016, Niharika Kohli
  *
  * @license https://www.gnu.org/licenses/gpl.txt
  */
-class checkIfDead {
+namespace Wikimedia\DeadlinkChecker;
+
+class CheckIfDead {
 
 	/*
 	 * UserAgent for the device/browser we are pretending to be
