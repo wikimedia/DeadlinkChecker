@@ -3,7 +3,7 @@ Using composer:
 ```
 {
   "require": {
-     "Niharika29/DeadlinkChecker": "dev-master"
+     "niharika29/deadlinkchecker": "dev-master"
   }
 }
 ```
