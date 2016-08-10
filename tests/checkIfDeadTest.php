@@ -1,5 +1,4 @@
 <?php
-require_once dirname( __FILE__ ) . '/../src/CheckIfDead.php';
 use Wikimedia\DeadlinkChecker\CheckIfDead;
 
 class CheckIfDeadTest extends PHPUnit_Framework_TestCase {

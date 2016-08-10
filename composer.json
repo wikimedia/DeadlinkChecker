@@ -22,7 +22,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "Deadlink\\Checker\\": "src/"
+      "Wikimedia\\DeadlinkChecker\\": "src/"
     }
   },
   "require": {
