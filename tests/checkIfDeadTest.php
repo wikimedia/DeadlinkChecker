@@ -10,8 +10,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	public function testDeadlinkTrue() {
 		$obj = new CheckIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
-		$result = $obj->checkDeadlink( $url );
-		$this->assertEquals( true, $result['dead'] );
+		$result = $obj->isLinkDead( $url );
+		$this->assertEquals( true, $result[$url] );
 	}
 
 	/**
@@ -20,8 +20,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	public function testDeadlinkFalse() {
 		$obj = new CheckIfDead();
 		$url = 'https://en.wikipedia.org';
-		$result = $obj->checkDeadlink( $url );
-		$this->assertEquals( false, $result['dead'] );
+		$result = $obj->isLinkDead( $url );
+		$this->assertEquals( false, $result[$url] );
 	}
 
 	/**
@@ -35,9 +35,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html',
 			'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index='
 		];
-		$result = $obj->checkDeadlinks( $urls );
+		$result = $obj->areLinksDead( $urls );
 		$expected = [true, true, true, true];
-		$this->assertEquals( $expected, $result['dead'] );
+		$this->assertEquals( $expected, array_values( $result ) );
 	}
 
 	/**
@@ -55,9 +55,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			'http://flysunairexpress.com/#about',
 			'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc'
 		];
-		$result = $obj->checkDeadlinks( $urls );
+		$result = $obj->areLinksDead( $urls );
 		$expected = [false, false, false, false, false, false, false, false];
-		$this->assertEquals( $expected, $result['dead'] );
+		$this->assertEquals( $expected, array_values( $result ) );
 	}
 
 	/**
@@ -65,15 +65,11 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testCleanUrl() {
 		$obj = new CheckIfDead();
-		// workaround to make private function testable
-		$reflection = new \ReflectionClass( get_class( $obj ) );
-		$method = $reflection->getMethod( 'cleanUrl' );
-		$method->setAccessible( true );
-		$this->assertEquals( $method->invokeArgs( $obj, ['http://google.com?q=blah'] ), 'google.com?q=blah' );
-		$this->assertEquals( $method->invokeArgs( $obj, ['https://www.google.com/'] ), 'google.com' );
-		$this->assertEquals( $method->invokeArgs( $obj, ['ftp://google.com/#param=1'] ), 'google.com' );
-		$this->assertEquals( $method->invokeArgs( $obj, ['//google.com'] ), 'google.com' );
-		$this->assertEquals( $method->invokeArgs( $obj, ['www.google.www.com'] ), 'google.www.com' );
+		$this->assertEquals( $obj->cleanUrl( 'http://google.com?q=blah' ), 'google.com?q=blah' );
+		$this->assertEquals( $obj->cleanUrl( 'https://www.google.com/' ), 'google.com' );
+		$this->assertEquals( $obj->cleanUrl( 'ftp://google.com/#param=1' ), 'google.com' );
+		$this->assertEquals( $obj->cleanUrl( '//google.com' ), 'google.com' );
+		$this->assertEquals( $obj->cleanUrl( 'www.google.www.com' ), 'google.www.com' );
 	}
 
 }

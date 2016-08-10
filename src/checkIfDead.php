@@ -36,7 +36,7 @@ class CheckIfDead {
 	 * @param $url string URL to check
 	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive)
 	 */
-	public function checkDeadlink( $url ) {
+	public function isLinkDead( $url ) {
 		$ch = curl_init();
 		curl_setopt_array( $ch, $this->getCurlOptions( $url, true, true ) );
 		curl_exec( $ch );
@@ -48,12 +48,12 @@ class CheckIfDead {
 			'curl_error' => $error,
 			'url' => $url
 		];
-		$deadVal = $this->processResult( $curlInfo );
+		$deadVal = $this->processCurlResults( $curlInfo );
 		// If processresult gives us back a NULL, we assume it's dead
 		if ( is_null( $deadVal ) ) {
 			$deadVal = true;
 		}
-		$result = ['dead' => $deadVal, 'error' => $error];
+		$result = [$url => $deadVal];
 		return $result;
 	}
 
@@ -63,7 +63,7 @@ class CheckIfDead {
 	 * @param array $urls of URLs we are checking
 	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive) for each element
 	 */
-	public function checkDeadlinks( $urls ) {
+	public function areLinksDead( $urls ) {
 		// Array of URLs we want to send in for a full check
 		$fullCheckURLs = [];
 		// Create multiple curl handle
@@ -72,10 +72,7 @@ class CheckIfDead {
 			return false;
 		}
 		$curl_instances = [];
-		$returnArray = [
-			'dead' => [],
-			'error' => []
-		];
+		$deadLinks = [];
 		foreach ( $urls as $id => $url ) {
 			$curl_instances[$id] = curl_init();
 			if ( $curl_instances[$id] === false ) {
@@ -111,7 +108,6 @@ class CheckIfDead {
 		}
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
-			$returnArray['errors'][$id] = curl_error( $curl_instances[$id] );
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
@@ -123,10 +119,10 @@ class CheckIfDead {
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
 			// Deduce whether the site is dead or alive
-			$returnArray['dead'][$id] = $this->processResult( $curlInfo );
+			$deadLinks[$url] = $this->processCurlResults( $curlInfo );
 			// If we got back a null, we should do a full request
-			if ( is_null( $returnArray['dead'][$id] ) ) {
-				$fullCheckURLs[$id] = $url;
+			if ( is_null( $deadLinks[$url] ) ) {
+				$fullCheckURLs[] = $url;
 			}
 		}
 		// Close resource
@@ -134,13 +130,15 @@ class CheckIfDead {
 		// If we have URLs which didn't return anything, we should do a full check on them
 		if ( !empty( $fullCheckURLs ) ) {
 			$results = $this->performFullRequest( $fullCheckURLs );
-			// Merge back results from full request into our $returnArray
-			foreach ( $results['dead'] as $id => $result ) {
-				$returnArray['dead'][$id] = $this->processResult( $result );;
-				$returnArray['error'][$id] = $results['error'][$id];
+			// Merge back results from full request into our deadlinks array
+			array_merge( $deadLinks, $results );
+		}
+		foreach ( $deadLinks as $url => $val ) {
+			if ( is_null( $val ) ) {
+				$deadLinks[$url] = true;
 			}
 		}
-		return $returnArray;
+		return $deadLinks;
 	}
 
 	/**
@@ -156,10 +154,7 @@ class CheckIfDead {
 			return false;
 		}
 		$curl_instances = [];
-		$returnArray = [
-			'dead' => [],
-			'error' => []
-		];
+		$deadlinks = [];
 		foreach ( $urls as $id => $url ) {
 			$curl_instances[$id] = curl_init();
 			if ( $curl_instances[$id] === false ) {
@@ -195,7 +190,6 @@ class CheckIfDead {
 		}
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
-			$returnArray['error'][$id] = curl_error( $curl_instances[$id] );
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
@@ -206,15 +200,11 @@ class CheckIfDead {
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
-			$returnArray['dead'][$id] = $this->processResult( $curlInfo );
-			// If we get back a null with full request too, we mark it as a dead link to be on the safe side
-			if ( is_null( $returnArray['dead'][$id] ) ) {
-				$returnArray['dead'][$id] = true;
-			}
+			$deadlinks[$url] = $this->processCurlResults( $curlInfo );
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
-		return $returnArray;
+		return $deadlinks;
 	}
 
 	/**
@@ -269,7 +259,7 @@ class CheckIfDead {
 	 * @param array $curlInfo with values: Returned headers, Error number, Url checked for
 	 * @return bool true if dead; false if not
 	 */
-	protected function processResult( $curlInfo ) {
+	public function processCurlResults( $curlInfo ) {
 		//Determine if we are using FTP or HTTP
 		$method = $this->getRequestType( $curlInfo['url'] );
 		// Get HTTP code returned
@@ -323,7 +313,7 @@ class CheckIfDead {
 	 * @param string $url Initial url
 	 * @return array Possible root domains (strings)
 	 */
-	private function getDomainRoots( $url ) {
+	public function getDomainRoots( $url ) {
 		$roots = [];
 		$pieces = parse_url( $url );
 		if ( !isset( $pieces['host'], $pieces['host'] ) ) {
@@ -350,7 +340,7 @@ class CheckIfDead {
 	 * @param string $input
 	 * @return string Cleaned url string
 	 */
-	private function cleanUrl( $input ) {
+	public function cleanUrl( $input ) {
 		// scheme and www
 		$url = preg_replace( '/^((https?:|ftp:)?(\/\/))?(www\.)?/', '', $input );
 		// fragment
