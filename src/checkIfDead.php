@@ -53,8 +53,7 @@ class CheckIfDead {
 		if ( is_null( $deadVal ) ) {
 			$deadVal = true;
 		}
-		$result = [$url => $deadVal];
-		return $result;
+		return $deadVal;
 	}
 
 	/**

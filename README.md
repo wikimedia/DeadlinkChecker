@@ -1,5 +1,6 @@
-#### Installation
+### Installation
 Using composer:
+Add the following to your composer.json:
 ```
 {
   "require": {
@@ -7,43 +8,45 @@ Using composer:
   }
 }
 ```
+And then run 'composer update'.
+
 Or using git:
 ```
 $ git clone https://github.com/Niharika29/DeadlinkChecker.git
 ```
 
 
-#### Documentation
+### Documentation
 Code to determine if a given link on the web is dead or alive.
-
 
 Sample usage:
 
-##### Example 1:
+##### For checking a single link:
+
 ```
 $obj = new checkIfDead();
 $url = 'https://en.wikipedia.org';
 $exec = $obj->isLinkDead( $url );
-var_dump( $exec[$url] );
+print_r( $exec );
 ```
 Prints:
 ```
 false
 ```
-##### Example 2:
+##### For checking an array of links:
 ```
 $obj = new checkIfDead();
-$urls = [ 'https://en.wikipedia.org/nothing', 'https://en.wikipedia.org' ]
+$urls = [ 'https://en.wikipedia.org/nothing', 'https://en.wikipedia.org' ];
 $exec = $obj->areLinksDead( $urls );
-var_dump( $exec )
+print_r( $exec );
 ```
 Returns:
 ```
 [
-  'https://en.wikipedia.org/nothing' => false
+  'https://en.wikipedia.org/nothing' => false,
   'https://en.wikipedia.org' => true
 ]
 ```
 
-#### License
+### License
 This code is distributed under [GNU GPLv3+](https://www.gnu.org/copyleft/gpl.html)
