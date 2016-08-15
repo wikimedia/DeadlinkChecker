@@ -40,7 +40,7 @@ $urls = [ 'https://en.wikipedia.org/nothing', 'https://en.wikipedia.org' ];
 $exec = $obj->areLinksDead( $urls );
 echo var_export( $exec );
 ```
-Returns:
+Prints:
 ```
 array (
   'https://en.wikipedia.org/nothing' => true,
