@@ -1,6 +1,6 @@
 ### Installation
 Using composer:
-Add the following to your composer.json:
+Add the following to the composer.json file for your project:
 ```
 {
   "require": {
@@ -16,7 +16,7 @@ $ git clone https://github.com/Niharika29/DeadlinkChecker.git
 ```
 
 
-### Documentation
+### Usage
 Code to determine if a given link on the web is dead or alive.
 
 Sample usage:
@@ -27,7 +27,7 @@ Sample usage:
 $obj = new checkIfDead();
 $url = 'https://en.wikipedia.org';
 $exec = $obj->isLinkDead( $url );
-print_r( $exec );
+echo var_export( $exec );
 ```
 Prints:
 ```
@@ -38,14 +38,14 @@ false
 $obj = new checkIfDead();
 $urls = [ 'https://en.wikipedia.org/nothing', 'https://en.wikipedia.org' ];
 $exec = $obj->areLinksDead( $urls );
-print_r( $exec );
+echo var_export( $exec );
 ```
 Returns:
 ```
-[
-  'https://en.wikipedia.org/nothing' => false,
-  'https://en.wikipedia.org' => true
-]
+array (
+  'https://en.wikipedia.org/nothing' => true,
+  'https://en.wikipedia.org' => false,
+)
 ```
 
 ### License
