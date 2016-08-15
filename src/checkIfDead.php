@@ -34,7 +34,7 @@ class CheckIfDead {
 	 * Check if a single URL is dead by performing a full text curl
 	 *
 	 * @param $url string URL to check
-	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive)
+	 * @return bool true(dead)/false(alive)
 	 */
 	public function isLinkDead( $url ) {
 		$ch = curl_init();
@@ -60,7 +60,7 @@ class CheckIfDead {
 	 * Check an array of links
 	 *
 	 * @param array $urls of URLs we are checking
-	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive) for each element
+	 * @return array Each key is a URL and each value is true (dead) or false (alive)
 	 */
 	public function areLinksDead( $urls ) {
 		// Array of URLs we want to send in for a full check
@@ -214,7 +214,7 @@ class CheckIfDead {
 	 * @param bool $full Is this a request for full body or just header?
 	 * @return array Options for curl
 	 */
-	public function getCurlOptions( $url, $ftp = false, $full = false ) {
+	protected function getCurlOptions( $url, $ftp = false, $full = false ) {
 		$options = [
 			CURLOPT_URL => $url,
 			CURLOPT_HEADER => 1,
@@ -244,7 +244,7 @@ class CheckIfDead {
 	 * @param $url String URL we are checking against
 	 * @return string "FTP" or "HTTP"
 	 */
-	public function getRequestType( $url ) {
+	protected function getRequestType( $url ) {
 		if ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) == "ftp" ) {
 			return "FTP";
 		} else {
@@ -258,7 +258,7 @@ class CheckIfDead {
 	 * @param array $curlInfo with values: Returned headers, Error number, Url checked for
 	 * @return bool true if dead; false if not
 	 */
-	public function processCurlResults( $curlInfo ) {
+	protected function processCurlResults( $curlInfo ) {
 		//Determine if we are using FTP or HTTP
 		$method = $this->getRequestType( $curlInfo['url'] );
 		// Get HTTP code returned
@@ -312,7 +312,7 @@ class CheckIfDead {
 	 * @param string $url Initial url
 	 * @return array Possible root domains (strings)
 	 */
-	public function getDomainRoots( $url ) {
+	protected function getDomainRoots( $url ) {
 		$roots = [];
 		$pieces = parse_url( $url );
 		if ( !isset( $pieces['host'], $pieces['host'] ) ) {
@@ -339,7 +339,7 @@ class CheckIfDead {
 	 * @param string $input
 	 * @return string Cleaned url string
 	 */
-	public function cleanUrl( $input ) {
+	protected function cleanUrl( $input ) {
 		// scheme and www
 		$url = preg_replace( '/^((https?:|ftp:)?(\/\/))?(www\.)?/', '', $input );
 		// fragment
