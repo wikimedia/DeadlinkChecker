@@ -244,7 +244,9 @@ class CheckIfDead {
 			$options[CURLOPT_FTP_FILEMETHOD] = CURLFTPMETHOD_SINGLECWD;
 		}
 		if ( $full ) {
+			// Set CURLOPT_USERPWD for anonymous FTP login
 			$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
+			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
