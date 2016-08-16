@@ -241,7 +241,11 @@ class CheckIfDead {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
 			$options[CURLOPT_FTPSSLAUTH] = CURLFTPAUTH_DEFAULT;
-			$options[CURLOPT_FTP_FILEMETHOD] = CURLFTPMETHOD_SINGLECWD;
+			if ( defined( 'CURLOPT_FTP_FILEMETHOD' ) ) {
+				// Requires libcurl >= 7.15.1
+				// Mot available with HHVM <3.14.0
+				$options[CURLOPT_FTP_FILEMETHOD] = CURLFTPMETHOD_SINGLECWD;
+			}
 		}
 		if ( $full ) {
 			$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
