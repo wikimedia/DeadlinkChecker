@@ -1,5 +1,4 @@
 <?php
-require_once dirname( __FILE__ ) . '/../vendor/autoload.php';
 use Wikimedia\DeadlinkChecker\CheckIfDead;
 
 class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
@@ -11,7 +10,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$obj = new CheckIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
 		$result = $obj->isLinkDead( $url );
-		$this->assertEquals( true, $result[$url] );
+		$this->assertTrue( $result );
 	}
 
 	/**
@@ -21,7 +20,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$obj = new CheckIfDead();
 		$url = 'https://en.wikipedia.org';
 		$result = $obj->isLinkDead( $url );
-		$this->assertEquals( false, $result[$url] );
+		$this->assertFalse( $result );
 	}
 
 	/**
@@ -29,14 +28,16 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testDeadlinksTrue() {
 		$obj = new CheckIfDead();
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$urls = [
 			'https://en.wikipedia.org/nothing',
 			'http://www.copart.co.uk/c2/specialSearch.html?_eventId=getLot&execution=e1s2&lotId=10543580',
 			'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html',
 			'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index='
 		];
+		// @codingStandardsIgnoreEnd
 		$result = $obj->areLinksDead( $urls );
-		$expected = [true, true, true, true];
+		$expected = [ true, true, true, true ];
 		$this->assertEquals( $expected, array_values( $result ) );
 	}
 
@@ -45,6 +46,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testDeadlinksFalse() {
 		$obj = new CheckIfDead();
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$urls = [
 			'https://en.wikipedia.org/wiki/Main_Page',
 			'https://en.wikipedia.org/w/index.php?title=Republic_of_India',
@@ -55,8 +57,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			'http://flysunairexpress.com/#about',
 			'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc'
 		];
+		// @codingStandardsIgnoreEnd
 		$result = $obj->areLinksDead( $urls );
-		$expected = [false, false, false, false, false, false, false, false];
+		$expected = [ false, false, false, false, false, false, false, false ];
 		$this->assertEquals( $expected, array_values( $result ) );
 	}
 
