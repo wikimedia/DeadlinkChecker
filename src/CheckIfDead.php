@@ -8,27 +8,40 @@ namespace Wikimedia\DeadlinkChecker;
 
 class CheckIfDead {
 
-	/*
+	/**
 	 * UserAgent for the device/browser we are pretending to be
 	 */
+	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
+	// @codingStandardsIgnoreEnd
 
 	/**
 	 *  HTTP codes that do not indicate a dead link
 	 */
-	protected $goodHttpCodes = [100, 101, 102, 200, 201, 202, 203, 204, 205, 206, 207, 208, 226, 300,
-								301, 302, 303, 304, 305, 306, 307, 308, 103];
+	protected $goodHttpCodes = [
+		100, 101, 102, 103,
+		200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
+		300, 301, 302, 303, 304, 305, 306, 307, 308,
+	];
 
 	/**
 	 * FTP codes that do not indicate a dead link
 	 */
-	protected $goodFtpCodes = [100, 110, 120, 125, 150, 200, 202, 211, 212, 213, 214, 215, 220, 221, 225, 226,
-							   227, 228, 229, 230, 231, 232, 234, 250, 257, 300, 331, 332, 350, 600, 631, 633];
+	protected $goodFtpCodes = [
+		100, 110, 120, 125, 150,
+		200, 202, 211, 212, 213, 214, 215, 220, 221, 225,
+		226, 227, 228, 229, 230, 231, 232, 234, 250, 257,
+		300, 331, 332, 350, 600, 631, 633,
+	];
 
 	/**
-	 * Curl error codes that are problematic and the link should be considered dead
+	 * Curl error codes that are problematic and the link should be considered
+	 * dead
 	 */
-	protected $curlErrorCodes = [3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47, 51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87];
+	protected $curlErrorCodes = [
+		3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47,
+		51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87,
+	];
 
 	/**
 	 * Check if a single URL is dead by performing a full text curl
@@ -77,7 +90,7 @@ class CheckIfDead {
 			if ( $curl_instances[$id] === false ) {
 				return false;
 			}
-			//In case the protocol is missing, assume it goes to HTTPS
+			// In case the protocol is missing, assume it goes to HTTPS
 			if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 				$url = "https:$url";
 			}
@@ -144,7 +157,8 @@ class CheckIfDead {
 	 * Perform a complete text request, not just for headers
 	 *
 	 * @param array $urls URLs we are checking
-	 * @return array with params 'error':curl error number and 'result':true(dead)/false(alive) for each element
+	 * @return array with params 'error':curl error number and
+	 *   'result':true(dead)/false(alive) for each element
 	 */
 	protected function performFullRequest( $urls ) {
 		// Create multiple curl handle
@@ -159,7 +173,7 @@ class CheckIfDead {
 			if ( $curl_instances[$id] === false ) {
 				return false;
 			}
-			//In case the protocol is missing, assume it goes to HTTPS
+			// In case the protocol is missing, assume it goes to HTTPS
 			if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 				$url = "https:$url";
 			}
@@ -259,7 +273,7 @@ class CheckIfDead {
 	 * @return bool true if dead; false if not
 	 */
 	protected function processCurlResults( $curlInfo ) {
-		//Determine if we are using FTP or HTTP
+		// Determine if we are using FTP or HTTP
 		$method = $this->getRequestType( $curlInfo['url'] );
 		// Get HTTP code returned
 		$httpCode = $curlInfo['http_code'];
@@ -291,18 +305,19 @@ class CheckIfDead {
 				}
 			}
 		}
-		//If there was an error during the CURL process, check if the code returned is a server side problem
+		// If there was an error during the CURL process, check if the code
+		// returned is a server side problem
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
 			return true;
 		}
-		//Check for valid non-error codes for HTTP or FTP
+		// Check for valid non-error codes for HTTP or FTP
 		if ( $method == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			return true;
-			//Check for valid non-error codes for FTP
+			// Check for valid non-error codes for FTP
 		} elseif ( $method == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			return true;
 		}
-		//Yay, the checks passed, and the site is alive.
+		// Yay, the checks passed, and the site is alive.
 		return false;
 	}
 
