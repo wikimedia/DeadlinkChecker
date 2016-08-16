@@ -29,6 +29,16 @@
     "php": ">=5.5.9"
   },
   "require-dev": {
+    "jakub-onderka/php-parallel-lint": "~0.8",
+    "mediawiki/mediawiki-codesniffer": "0.7.2",
     "phpunit/phpunit": "~4.8|~5.0"
+  },
+  "scripts": {
+    "test": [
+      "composer validate --no-interaction",
+      "parallel-lint . --exclude vendor",
+      "phpunit",
+      "phpcs -p"
+    ]
   }
 }
