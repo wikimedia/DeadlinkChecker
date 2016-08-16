@@ -339,7 +339,7 @@ class CheckIfDead {
 	 * @param string $input
 	 * @return string Cleaned url string
 	 */
-	protected function cleanUrl( $input ) {
+	public function cleanUrl( $input ) {
 		// scheme and www
 		$url = preg_replace( '/^((https?:|ftp:)?(\/\/))?(www\.)?/', '', $input );
 		// fragment
