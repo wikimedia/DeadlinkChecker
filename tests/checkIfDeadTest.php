@@ -11,7 +11,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$obj = new CheckIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
 		$result = $obj->isLinkDead( $url );
-		$this->assertEquals( true, $result[$url] );
+		$this->assertTrue( $result );
 	}
 
 	/**
@@ -21,7 +21,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$obj = new CheckIfDead();
 		$url = 'https://en.wikipedia.org';
 		$result = $obj->isLinkDead( $url );
-		$this->assertEquals( false, $result[$url] );
+		$this->assertFalse( $result );
 	}
 
 	/**
