@@ -5,9 +5,9 @@ use Wikimedia\DeadlinkChecker\CheckIfDead;
 class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 
 	/**
-	 * Test a single dead link
+	 * Test a single dead link via HTTP
 	 */
-	public function testDeadlinkTrue() {
+	public function testDeadlinkTrueHTTP() {
 		$obj = new CheckIfDead();
 		$url = 'http://worldchiropracticalliance.org/resources/greens/green4.htm';
 		$result = $obj->isLinkDead( $url );
@@ -15,11 +15,51 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	}
 
 	/**
-	 * Test a single live link
+	 * Test a single dead link via HTTPS
 	 */
-	public function testDeadlinkFalse() {
+	public function testDeadlinkTrueHTTPS() {
+		$obj = new CheckIfDead();
+		$url = 'https://en.wikipedia.org/nothing';
+		$result = $obj->isLinkDead( $url );
+		$this->assertTrue( $result );
+	}
+
+	/**
+	 * Test a single dead link with a protocal relative URL
+	 */
+	public function testDeadlinkTrueNoProtocol() {
+		$obj = new CheckIfDead();
+		$url = '//en.wikipedia.org/nothing';
+		$result = $obj->isLinkDead( $url );
+		$this->assertTrue( $result );
+	}
+
+	/**
+	 * Test a single live link via HTTPS
+	 */
+	public function testDeadlinkFalseHTTPS() {
 		$obj = new CheckIfDead();
 		$url = 'https://en.wikipedia.org';
+		$result = $obj->isLinkDead( $url );
+		$this->assertFalse( $result );
+	}
+
+	/**
+	 * Test a single live link with a protocal relative URL
+	 */
+	public function testDeadlinkFalseNoProtocol() {
+		$obj = new CheckIfDead();
+		$url = '//en.wikipedia.org/wiki/Main_Page';
+		$result = $obj->isLinkDead( $url );
+		$this->assertFalse( $result );
+	}
+
+	/**
+	 * Test a single live link via FTP
+	 */
+	public function testDeadlinkFalseFTP() {
+		$obj = new CheckIfDead();
+		$url = 'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc';
 		$result = $obj->isLinkDead( $url );
 		$this->assertFalse( $result );
 	}
