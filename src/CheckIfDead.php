@@ -44,14 +44,22 @@ class CheckIfDead {
 	];
 
 	/**
-	 * Check if a single URL is dead by performing a full text curl
+	 * Check if a single URL is dead by performing a full curl request
 	 *
-	 * @param $url string URL to check
-	 * @return bool true(dead)/false(alive)
+	 * @param string $url URL to check
+	 * @return bool|null Returns null if curl is unable to initialize.
+	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
 		$ch = curl_init();
-		curl_setopt_array( $ch, $this->getCurlOptions( $url, true, true ) );
+		if ( $ch === false ) {
+			return null;
+		}
+		// In case the protocol is missing, assume it goes to HTTPS
+		if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
+			$url = "https:$url";
+		}
+		curl_setopt_array( $ch, $this->getCurlOptions( $url, true ) );
 		curl_exec( $ch );
 		$headers = curl_getinfo( $ch );
 		$error = curl_error( $ch );
@@ -72,8 +80,10 @@ class CheckIfDead {
 	/**
 	 * Check an array of links
 	 *
-	 * @param array $urls of URLs we are checking
-	 * @return array Each key is a URL and each value is true (dead) or false (alive)
+	 * @param array $urls Array of URLs we are checking
+	 * @return array|null Returns null if curl is unable to initialize.
+	 *     Otherwise returns an array in which each key is a URL and each value is
+	 *     true (dead) or false (alive).
 	 */
 	public function areLinksDead( $urls ) {
 		// Array of URLs we want to send in for a full check
@@ -81,30 +91,25 @@ class CheckIfDead {
 		// Create multiple curl handle
 		$multicurl_resource = curl_multi_init();
 		if ( $multicurl_resource === false ) {
-			return false;
+			return null;
 		}
 		$curl_instances = [];
 		$deadLinks = [];
 		foreach ( $urls as $id => $url ) {
 			$curl_instances[$id] = curl_init();
 			if ( $curl_instances[$id] === false ) {
-				return false;
+				return null;
 			}
 			// In case the protocol is missing, assume it goes to HTTPS
 			if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 				$url = "https:$url";
 			}
-			$method = $this->getRequestType( $url );
 			// Get appropriate curl options
-			if ( $method == "FTP" ) {
-				curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, true, false ) );
-			} else {
-				curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, false, false ) );
-			}
+			curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, false ) );
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
 		}
-		// Let's do the CURL operations
+		// Let's do the curl operations
 		$active = null;
 		do {
 			$mrc = curl_multi_exec( $multicurl_resource, $active );
@@ -177,13 +182,8 @@ class CheckIfDead {
 			if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 				$url = "https:$url";
 			}
-			$method = $this->getRequestType( $url );
 			// Get appropriate curl options
-			if ( $method == "FTP" ) {
-				curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, true, true ) );
-			} else {
-				curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, false, true ) );
-			}
+			curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, true ) );
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
 		}
@@ -224,11 +224,10 @@ class CheckIfDead {
 	 * Get CURL options
 	 *
 	 * @param $url String URL we are testing against
-	 * @param bool $ftp Is this an FTP request?
 	 * @param bool $full Is this a request for full body or just header?
 	 * @return array Options for curl
 	 */
-	protected function getCurlOptions( $url, $ftp = false, $full = false ) {
+	protected function getCurlOptions( $url, $full = false ) {
 		$options = [
 			CURLOPT_URL => $url,
 			CURLOPT_HEADER => 1,
@@ -237,7 +236,8 @@ class CheckIfDead {
 			CURLOPT_TIMEOUT => 30,
 			CURLOPT_USERAGENT => $this->userAgent
 		];
-		if ( $ftp ) {
+		$requestType = $this->getRequestType( $url );
+		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
 			$options[CURLOPT_FTPSSLAUTH] = CURLFTPAUTH_DEFAULT;
@@ -271,12 +271,12 @@ class CheckIfDead {
 	/**
 	 * Process the returned headers
 	 *
-	 * @param array $curlInfo with values: Returned headers, Error number, Url checked for
-	 * @return bool true if dead; false if not
+	 * @param array $curlInfo Array with values: returned headers, error number, URL checked for
+	 * @return bool|null Returns true if dead, false if alive, null if uncertain
 	 */
 	protected function processCurlResults( $curlInfo ) {
 		// Determine if we are using FTP or HTTP
-		$method = $this->getRequestType( $curlInfo['url'] );
+		$requestType = $this->getRequestType( $curlInfo['url'] );
 		// Get HTTP code returned
 		$httpCode = $curlInfo['http_code'];
 		// Get final URL
@@ -313,10 +313,10 @@ class CheckIfDead {
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
-		if ( $method == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
+		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			return true;
 			// Check for valid non-error codes for FTP
-		} elseif ( $method == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
+		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			return true;
 		}
 		// Yay, the checks passed, and the site is alive.
