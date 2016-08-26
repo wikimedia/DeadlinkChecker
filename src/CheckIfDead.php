@@ -103,6 +103,7 @@ class CheckIfDead {
 			// In case the protocol is missing, assume it goes to HTTPS
 			if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 				$url = "https:$url";
+				$urls[$id] = $url;
 			}
 			// Get appropriate curl options
 			curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, false ) );
@@ -177,10 +178,6 @@ class CheckIfDead {
 			$curl_instances[$id] = curl_init();
 			if ( $curl_instances[$id] === false ) {
 				return false;
-			}
-			// In case the protocol is missing, assume it goes to HTTPS
-			if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
-				$url = "https:$url";
 			}
 			// Get appropriate curl options
 			curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $url, true ) );
