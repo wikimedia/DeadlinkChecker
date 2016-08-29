@@ -51,25 +51,8 @@ class CheckIfDead {
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
-		$ch = curl_init();
-		if ( $ch === false ) {
-			return null;
-		}
-		// In case the protocol is missing, assume it goes to HTTPS
-		if ( is_null( parse_url( $url, PHP_URL_SCHEME ) ) ) {
-			$url = "https:$url";
-		}
-		curl_setopt_array( $ch, $this->getCurlOptions( $url, true ) );
-		curl_exec( $ch );
-		$headers = curl_getinfo( $ch );
-		$error = curl_error( $ch );
-		$curlInfo = [
-			'http_code' => $headers['http_code'],
-			'effective_url' => $headers['url'],
-			'curl_error' => $error,
-			'url' => $url
-		];
-		$deadVal = $this->processCurlResults( $curlInfo, true );
+		$deadVal = $this->areLinksDead( array( $url ) );
+		$deadVal = $deadVal[$url];
 		return $deadVal;
 	}
 
