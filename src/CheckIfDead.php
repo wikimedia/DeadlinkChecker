@@ -51,7 +51,7 @@ class CheckIfDead {
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
-		$deadVal = $this->areLinksDead( [$url] );
+		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
 		return $deadVal;
 	}
