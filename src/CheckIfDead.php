@@ -256,7 +256,7 @@ class CheckIfDead {
 		// Get final URL
 		$effectiveUrl = $curlInfo['effective_url'];
 		// Clean final url, removing scheme, 'www', and trailing slash
-		$effectiveUrlClean = $this->cleanUrl( $effectiveUrl );
+		$effectiveUrlClean = $this->cleanURL( $effectiveUrl );
 		// Get an array of possible root urls
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
@@ -276,7 +276,7 @@ class CheckIfDead {
 			return true;
 		}
 		// Check if there was a redirect by comparing final URL with original URL
-		if ( $effectiveUrlClean != $this->cleanUrl( $curlInfo['url'] ) ) {
+		if ( $effectiveUrlClean != $this->cleanURL( $curlInfo['url'] ) ) {
 			// Check against possible roots
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
@@ -332,9 +332,9 @@ class CheckIfDead {
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
-	 * @return string sanitized URLs.  False on failure.
+	 * @return string sanitized URL
 	 */
-	protected function sanitizeURL( $url ) {
+	public function sanitizeURL( $url ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
@@ -371,8 +371,7 @@ class CheckIfDead {
 			$url .= implode( '/',
 				array_map( "urlencode",
 					explode( '/',
-						substr(
-							urldecode( $parts['path'] ), 1 )
+						substr( urldecode( $parts['path'] ), 1 )
 					)
 				)
 			);
@@ -392,7 +391,7 @@ class CheckIfDead {
 	 * @param string $input
 	 * @return string Cleaned url string
 	 */
-	public function cleanUrl( $input ) {
+	public function cleanURL( $input ) {
 		// scheme and www
 		$url = preg_replace( '/^((https?:|ftp:)?(\/\/))?(www\.)?/', '', $input );
 		// fragment
