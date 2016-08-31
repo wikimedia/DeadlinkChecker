@@ -8,7 +8,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * Test live links
 	 */
 	public function testIsLinkDeadFalse() {
-		$obj = new CheckIfDead(); 
+		$obj = new CheckIfDead();
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$this->assertFalse( $obj->isLinkDead( 'https://en.wikipedia.org' ) );
 		$this->assertFalse( $obj->isLinkDead( '//en.wikipedia.org/wiki/Main_Page' ) );
 		$this->assertFalse( $obj->isLinkDead( 'https://en.wikipedia.org/w/index.php?title=Republic_of_India' ) );
@@ -18,7 +19,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse( $obj->isLinkDead( 'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html' ) );
 		$this->assertFalse( $obj->isLinkDead( 'http://content.onlinejacc.org/cgi/content/full/41/9/1633' ) );
 		$this->assertFalse( $obj->isLinkDead( 'http://flysunairexpress.com/#about' ) );
-		//$this->assertFalse( $obj->isLinkDead( 'http://кц.рф/ru/' ) );
+		// $this->assertFalse( $obj->isLinkDead( 'http://кц.рф/ru/' ) );
+		// @codingStandardsIgnoreEnd
 	}
 
 	/**
@@ -26,12 +28,14 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testIsLinkDeadTrue() {
 		$obj = new CheckIfDead();
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$this->assertTrue( $obj->isLinkDead( 'https://en.wikipedia.org/nothing' ) );
 		$this->assertTrue( $obj->isLinkDead( '//en.wikipedia.org/nothing' ) );
 		$this->assertTrue( $obj->isLinkDead( 'http://worldchiropracticalliance.org/resources/greens/green4.htm' ) );
 		$this->assertTrue( $obj->isLinkDead( 'http://www.copart.co.uk/c2/specialSearch.html?_eventId=getLot&execution=e1s2&lotId=10543580' ) );
 		$this->assertTrue( $obj->isLinkDead( 'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html' ) );
 		$this->assertTrue( $obj->isLinkDead( 'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=' ) );
+		// @codingStandardsIgnoreEnd
 	}
 
 	/**
@@ -55,11 +59,13 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testCleanURL() {
 		$obj = new CheckIfDead();
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$this->assertEquals( $obj->cleanURL( 'http://google.com?q=blah' ), 'google.com?q=blah' );
 		$this->assertEquals( $obj->cleanURL( 'https://www.google.com/' ), 'google.com' );
 		$this->assertEquals( $obj->cleanURL( 'ftp://google.com/#param=1' ), 'google.com' );
 		$this->assertEquals( $obj->cleanURL( '//google.com' ), 'google.com' );
 		$this->assertEquals( $obj->cleanURL( 'www.google.www.com' ), 'google.www.com' );
+		// @codingStandardsIgnoreEnd
 	}
 
 	/**
@@ -67,11 +73,13 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testSanitizeURL() {
 		$obj = new CheckIfDead();
-		//$this->assertEquals( $obj->sanitizeURL( 'http://google.com?q=blah' ), 'http://google.com?q=blah' );
-		//$this->assertEquals( $obj->sanitizeURL( '//google.com?q=blah' ), 'https://google.com?q=blah' );
-		//$this->assertEquals( $obj->sanitizeURL( 'ftp://google.com/#param=1' ), 'ftp://google.com/#param=1' );
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
+		// $this->assertEquals( $obj->sanitizeURL( 'http://google.com?q=blah' ), 'http://google.com?q=blah' );
+		// $this->assertEquals( $obj->sanitizeURL( '//google.com?q=blah' ), 'https://google.com?q=blah' );
+		// $this->assertEquals( $obj->sanitizeURL( 'ftp://google.com/#param=1' ), 'ftp://google.com/#param=1' );
 		$this->assertEquals( $obj->sanitizeURL( 'https://zh.wikipedia.org/wiki/猫' ), 'https://zh.wikipedia.org/wiki/%E7%8C%AB' );
 		$this->assertEquals( $obj->sanitizeURL( 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2' ), 'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2' );
+		// @codingStandardsIgnoreEnd
 	}
 
 }
