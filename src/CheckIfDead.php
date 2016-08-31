@@ -383,6 +383,12 @@ class CheckIfDead {
 		if ( isset( $parts['fragment'] ) ) {
 			$url .= "#".urlencode( urldecode( $parts['fragment'] ) );
 		}
+		//Make sure path, query, and fragment are properly encoded, and not overencoded.
+		//This avoids possible 400 Bad Response errors.
+		$url .= "/";
+		if( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) $url .= implode( '/', array_map( "urlencode", explode( '/', substr( urldecode( $parts['path'] ), 1 ) ) ) );
+		if( isset( $parts['query'] ) ) $url .= "?".urlencode( urldecode( $parts['query'] ) );
+		if( isset( $parts['fragment'] ) ) $url .= "#".urlencode( urldecode( $parts['fragment'] ) );
 		return $url;
 	}
 
