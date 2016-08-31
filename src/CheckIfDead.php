@@ -155,7 +155,7 @@ class CheckIfDead {
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
-				$this->getCurlOptions( $this->sanitizeURL( $url ), true)
+				$this->getCurlOptions( $this->sanitizeURL( $url ), true )
 			);
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
@@ -352,7 +352,7 @@ class CheckIfDead {
 		// Add username and password if present
 		if ( isset( $parts['user'] ) ) {
 			$url .= $parts['user'];
-			if (isset($parts['pass'])) {
+			if ( isset($parts['pass'] ) ) {
 				$url .= ":" . $parts['pass'];
 			}
 			$url .= "@";
@@ -360,7 +360,7 @@ class CheckIfDead {
 		// Add host
 		if ( isset( $parts['host'] ) ) {
 			$url .= $parts['host'];
-			if (isset($parts['port'])) {
+			if ( isset($parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
 		}
@@ -371,7 +371,7 @@ class CheckIfDead {
 			$url .= implode( '/',
 				array_map( "urlencode",
 					explode( '/',
-						substr( 
+						substr(				
 							urldecode( $parts['path'] ), 1 )
 					)
 				)
