@@ -51,7 +51,7 @@ class CheckIfDead {
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
-		$deadVal = $this->areLinksDead( array( $url ) );
+		$deadVal = $this->areLinksDead( [$url] );
 		$deadVal = $deadVal[$url];
 		return $deadVal;
 	}
@@ -81,7 +81,10 @@ class CheckIfDead {
 			}
 
 			// Get appropriate curl options
-			curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $this->sanitizeURL( $url ), false ) );
+			curl_setopt_array(
+				$curl_instances[$id],
+				$this->getCurlOptions( $this->sanitizeURL( $url ), false )
+			);
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
 		}
@@ -150,7 +153,10 @@ class CheckIfDead {
 				return false;
 			}
 			// Get appropriate curl options
-			curl_setopt_array( $curl_instances[$id], $this->getCurlOptions( $this->sanitizeURL( $url ), true ) );
+			curl_setopt_array(
+				$curl_instances[$id],
+				$this->getCurlOptions( $this->sanitizeURL( $url ), true)
+			);
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
 		}
@@ -329,35 +335,54 @@ class CheckIfDead {
 	 * @return string sanitized URLs.  False on failure.
 	 */
 	protected function sanitizeURL( $url ) {
-		//The domain is easily decoded by the DNS handler, but the path is what's seen by the respective webservice.
-		//We need to decode it because some can't handle encoded characters.
+		// The domain is easily decoded by the DNS handler,
+		// but the path is what's seen by the respective webservice.
+		// We need to encode it as some
+		// can't handle decoded characters.
 		$parts = parse_url( $url );
 		$url = "";
 		// In case the protocol is missing, assume it goes to HTTPS
-		if( !isset( $parts['scheme'] ) ) {
+		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
 		} else {
 			$url = $parts['scheme'];
 		}
-		//Move on to the domain
+		// Move on to the domain
 		$url .= "://";
-		//Add username and password if present
-		if( isset( $parts['user'] ) ) {
+		// Add username and password if present
+		if ( isset( $parts['user'] ) ) {
 			$url .= $parts['user'];
-			if( isset( $parts['pass'] ) ) $url .= ":".$parts['pass'];
+			if (isset($parts['pass'])) {
+				$url .= ":" . $parts['pass'];
+			}
 			$url .= "@";
 		}
-		//Add host
-		if( isset( $parts['host'] ) ) {
+		// Add host
+		if ( isset( $parts['host'] ) ) {
 			$url .= $parts['host'];
-			if( isset( $parts['port'] ) ) $url .= ":".$parts['port'];
+			if (isset($parts['port'])) {
+				$url .= ":" . $parts['port'];
+			}
 		}
-		//Make sure path, query, and fragment are properly encoded, and not overencoded.
-		//This avoids possible 400 Bad Response errors.
+		// Make sure path, query, and fragment are properly encoded, and not overencoded.
+		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
-		if( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) $url .= implode( '/', array_map( "urlencode", explode( '/', substr( urldecode( $parts['path'] ), 1 ) ) ) );
-		if( isset( $parts['query'] ) ) $url .= "?".urlencode( urldecode( $parts['query'] ) );
-		if( isset( $parts['fragment'] ) ) $url .= "#".urlencode( urldecode( $parts['fragment'] ) );
+		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
+			$url .= implode( '/',
+				array_map( "urlencode",
+					explode( '/',
+						substr( 
+							urldecode( $parts['path'] ), 1 )
+					)
+				)
+			);
+		}
+		if ( isset( $parts['query'] ) ) {
+			$url .= "?".urlencode( urldecode( $parts['query'] ) );
+		}
+		if ( isset( $parts['fragment'] ) ) {
+			$url .= "#".urlencode( urldecode( $parts['fragment'] ) );
+		}
 		return $url;
 	}
 
