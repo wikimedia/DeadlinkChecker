@@ -51,7 +51,7 @@ class CheckIfDead {
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
-		$deadVal = $this->areLinksDead ( [$url] );
+		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
 		return $deadVal;
 	}
@@ -352,7 +352,7 @@ class CheckIfDead {
 		// Add username and password if present
 		if ( isset( $parts['user'] ) ) {
 			$url .= $parts['user'];
-			if ( isset($parts['pass'] ) ) {
+			if ( isset( $parts['pass'] ) ) {
 				$url .= ":" . $parts['pass'];
 			}
 			$url .= "@";
@@ -360,7 +360,7 @@ class CheckIfDead {
 		// Add host
 		if ( isset( $parts['host'] ) ) {
 			$url .= $parts['host'];
-			if ( isset($parts['port'] ) ) {
+			if ( isset( $parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
 		}
@@ -371,7 +371,7 @@ class CheckIfDead {
 			$url .= implode( '/',
 				array_map( "urlencode",
 					explode( '/',
-						substr(				
+						substr(
 							urldecode( $parts['path'] ), 1 )
 					)
 				)
