@@ -256,7 +256,7 @@ class CheckIfDead {
 		// Get final URL
 		$effectiveUrl = $curlInfo['effective_url'];
 		// Clean final url, removing scheme, 'www', and trailing slash
-		$effectiveUrlClean = $this->cleanUrl( $effectiveUrl );
+		$effectiveUrlClean = $this->cleanURL( $effectiveUrl );
 		// Get an array of possible root urls
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
@@ -276,7 +276,7 @@ class CheckIfDead {
 			return true;
 		}
 		// Check if there was a redirect by comparing final URL with original URL
-		if ( $effectiveUrlClean != $this->cleanUrl( $curlInfo['url'] ) ) {
+		if ( $effectiveUrlClean != $this->cleanURL( $curlInfo['url'] ) ) {
 			// Check against possible roots
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
@@ -334,12 +334,15 @@ class CheckIfDead {
 	 * @param $url URL to sanitize
 	 * @return string sanitized URLs.  False on failure.
 	 */
-	protected function sanitizeURL( $url ) {
+	public function sanitizeURL( $url ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
 		// can't handle decoded characters.
-		$parts = $this->parse_url( $url );
+
+		// Break up the URL first
+		$parts = $this->parseURL( $url );
+
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -358,15 +361,18 @@ class CheckIfDead {
 		}
 		// Add host
 		if ( isset( $parts['host'] ) ) {
+			// Properly encode the host.  It can't be UTF-8
 			$url .= idn_to_ascii( $parts['host'] );
 			if ( isset( $parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
 		}
-		// Make sure path, query, and fragment are properly encoded, and not overencoded.
+		// Make sure path, query, and fragment are properly encoded, and not over-encoded.
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
+			// We don't want to encode the "/"s so break the path apart,
+			// encode it, and put it back together.
 			$url .= implode( '/',
 				array_map( "urlencode",
 					explode( '/',
@@ -377,19 +383,26 @@ class CheckIfDead {
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
+			// We have a query string, all queries start with a ?
 			$url .= "?";
+			// Break apart the query string.  Separate them into all of the arguments passed.
 			$parts['query'] = explode( '&', $parts['query'] );
-			foreach ( $parts['query'] as $i=>$argument ) {
-				$parts['query'][$i] = implode( '=',
+			// We need to encode each argument
+			foreach ( $parts['query'] as $index => $argument ) {
+				// Make sure we don't inadvertently encode the first instance of "="
+				// Otherwise we break the query.
+				$parts['query'][$index] = implode( '=',
 					array_map( "urlencode",
-						explode( '=', $parts['query'][$i], 2 )
+						explode( '=', $parts['query'][$index], 2 )
 					)
 				);
 			}
+			// Put the query string back together.
 			$parts['query'] = implode( '&', $parts['query'] );
 			$url .= $parts['query'];
 		}
 		if ( isset( $parts['fragment'] ) ) {
+			// We don't need to encode the fragment, that's handled client side anyways.
 			$url .= "#".$parts['fragment'];
 		}
 		return $url;
@@ -402,7 +415,7 @@ class CheckIfDead {
 	 * @param int $component Only return a given component
 	 * @return mixed False on failure, array on success, string or null if component is specified.
 	 */
-	private function parse_url( $url, $component = -1 ) {
+	public function parseURL( $url, $component = -1 ) {
 		$encodedUrl = preg_replace_callback(
 			'%[^:/@?&=#]+%usD',
 			function ( $matches ) {
@@ -428,7 +441,7 @@ class CheckIfDead {
 	 * @param string $input
 	 * @return string Cleaned url string
 	 */
-	public function cleanUrl( $input ) {
+	public function cleanURL($input ) {
 		// scheme and www
 		$url = preg_replace( '/^((https?:|ftp:)?(\/\/))?(www\.)?/', '', $input );
 		// fragment
