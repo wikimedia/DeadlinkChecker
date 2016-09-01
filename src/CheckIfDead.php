@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2016, Niharika Kohli
  *
@@ -374,7 +375,7 @@ class CheckIfDead {
 			$url .= implode( '/',
 				array_map( "urlencode",
 					explode( '/',
-						substr( 
+						substr(
 							urldecode( $parts['path'] ), 1 )
 					)
 				)
