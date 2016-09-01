@@ -424,8 +424,7 @@ class CheckIfDead {
 	private function parse_url( $url, $component = -1 ) {
 		$encodedUrl = preg_replace_callback(
 			'%[^:/@?&=#]+%usD',
-			function ( $matches )
-			{
+			function ( $matches ) {
 				return urlencode( $matches[0] );
 			},
 			$url
@@ -433,8 +432,7 @@ class CheckIfDead {
 
 		if ( $component == -1 ) {
 			$parts = parse_url( $encodedUrl );
-			foreach ( $parts as $name => $value )
-			{
+			foreach ( $parts as $name => $value ) {
 				$parts[$name] = urldecode( $value );
 			}
 			return $parts;
