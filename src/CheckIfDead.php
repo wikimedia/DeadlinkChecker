@@ -51,7 +51,7 @@ class CheckIfDead {
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
-		$deadVal = $this->areLinksDead( [$url] );
+		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
 		return $deadVal;
 	}
@@ -155,7 +155,7 @@ class CheckIfDead {
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
-				$this->getCurlOptions( $this->sanitizeURL( $url ), true)
+				$this->getCurlOptions( $this->sanitizeURL( $url ), true )
 			);
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
@@ -256,7 +256,7 @@ class CheckIfDead {
 		// Get final URL
 		$effectiveUrl = $curlInfo['effective_url'];
 		// Clean final url, removing scheme, 'www', and trailing slash
-		$effectiveUrlClean = $this->cleanUrl( $effectiveUrl );
+		$effectiveUrlClean = $this->cleanURL( $effectiveUrl );
 		// Get an array of possible root urls
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
@@ -276,7 +276,7 @@ class CheckIfDead {
 			return true;
 		}
 		// Check if there was a redirect by comparing final URL with original URL
-		if ( $effectiveUrlClean != $this->cleanUrl( $curlInfo['url'] ) ) {
+		if ( $effectiveUrlClean != $this->cleanURL( $curlInfo['url'] ) ) {
 			// Check against possible roots
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
@@ -332,9 +332,9 @@ class CheckIfDead {
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
-	 * @return string sanitized URLs.  False on failure.
+	 * @return string sanitized URL
 	 */
-	protected function sanitizeURL( $url ) {
+	public function sanitizeURL( $url ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
@@ -352,7 +352,7 @@ class CheckIfDead {
 		// Add username and password if present
 		if ( isset( $parts['user'] ) ) {
 			$url .= $parts['user'];
-			if (isset($parts['pass'])) {
+			if ( isset( $parts['pass'] ) ) {
 				$url .= ":" . $parts['pass'];
 			}
 			$url .= "@";
@@ -360,7 +360,7 @@ class CheckIfDead {
 		// Add host
 		if ( isset( $parts['host'] ) ) {
 			$url .= $parts['host'];
-			if (isset($parts['port'])) {
+			if ( isset( $parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
 		}
@@ -392,7 +392,7 @@ class CheckIfDead {
 	 * @param string $input
 	 * @return string Cleaned url string
 	 */
-	public function cleanUrl( $input ) {
+	public function cleanURL( $input ) {
 		// scheme and www
 		$url = preg_replace( '/^((https?:|ftp:)?(\/\/))?(www\.)?/', '', $input );
 		// fragment
