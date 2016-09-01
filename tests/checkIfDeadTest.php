@@ -84,7 +84,6 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		// @codingStandardsIgnoreEnd
 	}
 
-
 	/**
 	 * Test the URL parsing function
 	 */
