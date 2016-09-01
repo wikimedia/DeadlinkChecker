@@ -339,8 +339,7 @@ class CheckIfDead {
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
 		// can't handle decoded characters.
-		$parts = parse_url( $url );
-		$url = "";
+		$parts = $this->parse_url( $url );
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -359,7 +358,7 @@ class CheckIfDead {
 		}
 		// Add host
 		if ( isset( $parts['host'] ) ) {
-			$url .= $parts['host'];
+			$url .= idn_to_ascii( $parts['host'] );
 			if ( isset( $parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
@@ -397,12 +396,51 @@ class CheckIfDead {
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
-			$url .= "?".urlencode( urldecode( $parts['query'] ) );
+			$url .= "?";
+			$parts['query'] = explode( '&', $parts['query'] );
+			foreach ( $parts['query'] as $i=>$argument ) {
+				$parts['query'][$i] = implode( '=',
+					array_map( "urlencode",
+						explode( '=', $parts['query'][$i], 2 )
+					)
+				);
+			}
+			$parts['query'] = implode( '&', $parts['query'] );
+			$url .= $parts['query'];
 		}
 		if ( isset( $parts['fragment'] ) ) {
-			$url .= "#".urlencode( urldecode( $parts['fragment'] ) );
+			$url .= "#".$parts['fragment'];
 		}
 		return $url;
+	}
+
+	/**
+	 * Custom parse_url function to support UTF-8 URLs
+	 *
+	 * @param string $url The URL to parse. Invalid characters are replaced by _.
+	 * @param int $component Only return a given component
+	 * @return mixed False on failure, array on success, string or null if component is specified.
+	 */
+	private function parse_url( $url, $component = -1 ) {
+		$encodedUrl = preg_replace_callback(
+			'%[^:/@?&=#]+%usD',
+			function ( $matches )
+			{
+				return urlencode( $matches[0] );
+			},
+			$url
+		);
+
+		if ( $component == -1 ) {
+			$parts = parse_url( $encodedUrl );
+			foreach ( $parts as $name => $value )
+			{
+				$parts[$name] = urldecode( $value );
+			}
+			return $parts;
+		} else {
+			return urldecode( parse_url( $encodedUrl, $component ) );
+		}
 	}
 
 	/**
