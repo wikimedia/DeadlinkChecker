@@ -1,4 +1,5 @@
 <?php
+
 require_once __DIR__ . '/../vendor/autoload.php';
 use Wikimedia\DeadlinkChecker\CheckIfDead;
 
@@ -19,7 +20,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse( $obj->isLinkDead( 'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html' ) );
 		$this->assertFalse( $obj->isLinkDead( 'http://content.onlinejacc.org/cgi/content/full/41/9/1633' ) );
 		$this->assertFalse( $obj->isLinkDead( 'http://flysunairexpress.com/#about' ) );
-		// $this->assertFalse( $obj->isLinkDead( 'http://кц.рф/ru/' ) );
+		$this->assertFalse( $obj->isLinkDead( 'http://кц.рф/ru/' ) );
 		// @codingStandardsIgnoreEnd
 	}
 
@@ -74,12 +75,31 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	public function testSanitizeURL() {
 		$obj = new CheckIfDead();
 		// @codingStandardsIgnoreStart Line exceeds 100 characters
-		// $this->assertEquals( $obj->sanitizeURL( 'http://google.com?q=blah' ), 'http://google.com?q=blah' );
-		// $this->assertEquals( $obj->sanitizeURL( '//google.com?q=blah' ), 'https://google.com?q=blah' );
-		// $this->assertEquals( $obj->sanitizeURL( 'ftp://google.com/#param=1' ), 'ftp://google.com/#param=1' );
+		$this->assertEquals( $obj->sanitizeURL( 'http://google.com?q=blah' ), 'http://google.com/?q=blah' );
+		$this->assertEquals( $obj->sanitizeURL( '//google.com?q=blah' ), 'https://google.com/?q=blah' );
+		$this->assertEquals( $obj->sanitizeURL( 'ftp://google.com/#param=1' ), 'ftp://google.com/#param=1' );
 		$this->assertEquals( $obj->sanitizeURL( 'https://zh.wikipedia.org/wiki/猫' ), 'https://zh.wikipedia.org/wiki/%E7%8C%AB' );
 		$this->assertEquals( $obj->sanitizeURL( 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2' ), 'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2' );
+		$this->assertEquals( $obj->sanitizeURL( 'http://кц.рф/ru/' ), 'http://xn--j1ay.xn--p1ai/ru/' );
 		// @codingStandardsIgnoreEnd
 	}
 
+	/**
+	 * Test the URL parsing function
+	 */
+	public function testParseURL() {
+		$obj = new CheckIfDead();
+		// @codingStandardsIgnoreStart Line exceeds 100 characters
+		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_SCHEME ), 'http' );
+		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_HOST ), 'кц.рф' );
+		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_PATH ), '/ru/' );
+		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_USER ) );
+		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_PASS ) );
+		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_PORT ) );
+		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_QUERY ) );
+		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_FRAGMENT ) );
+		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/' ), array( 'scheme' => 'http', 'host' => 'кц.рф', 'path' => '/ru/' ) );
+		$this->assertEquals( $obj->parseURL( 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2' ), array( 'scheme' => 'http', 'host' => 'www.discogs.com', 'path' => '/Various-Kad-Jeknu-Dragačevske-Trube-2' ) );
+		// @codingStandardsIgnoreEnd
+	}
 }

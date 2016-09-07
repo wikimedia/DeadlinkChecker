@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Copyright (c) 2016, Niharika Kohli
  *
@@ -332,15 +333,17 @@ class CheckIfDead {
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
-	 * @return string sanitized URL
+	 * @return string sanitized URLs.
 	 */
 	public function sanitizeURL( $url ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
 		// can't handle decoded characters.
-		$parts = parse_url( $url );
-		$url = "";
+
+		// Break up the URL first
+		$parts = $this->parseURL( $url );
+
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -359,7 +362,8 @@ class CheckIfDead {
 		}
 		// Add host
 		if ( isset( $parts['host'] ) ) {
-			$url .= $parts['host'];
+			// Properly encode the host.  It can't be UTF-8
+			$url .= idn_to_ascii( $parts['host'] );
 			if ( isset( $parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
@@ -371,18 +375,63 @@ class CheckIfDead {
 			$url .= implode( '/',
 				array_map( "urlencode",
 					explode( '/',
-						substr( urldecode( $parts['path'] ), 1 )
+						substr(
+							urldecode( $parts['path'] ), 1 )
 					)
 				)
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
-			$url .= "?".urlencode( urldecode( $parts['query'] ) );
+			// We have a query string, all queries start with a ?
+			$url .= "?";
+			// Break apart the query string.  Separate them into all of the arguments passed.
+			$parts['query'] = explode( '&', $parts['query'] );
+			// We need to encode each argument
+			foreach ( $parts['query'] as $index => $argument ) {
+				// Make sure we don't inadvertently encode the first instance of "="
+				// Otherwise we break the query.
+				$parts['query'][$index] = implode( '=',
+					array_map( "urlencode",
+						explode( '=', $parts['query'][$index], 2 )
+					)
+				);
+			}
+			// Put the query string back together.
+			$parts['query'] = implode( '&', $parts['query'] );
+			$url .= $parts['query'];
 		}
 		if ( isset( $parts['fragment'] ) ) {
-			$url .= "#".urlencode( urldecode( $parts['fragment'] ) );
+			// We don't need to encode the fragment, that's handled client side anyways.
+			$url .= "#".$parts['fragment'];
 		}
 		return $url;
+	}
+
+	/**
+	 * Custom parse_url function to support UTF-8 URLs
+	 *
+	 * @param string $url The URL to parse. Invalid characters are replaced by _.
+	 * @param int $component Only return a given component
+	 * @return mixed False on failure, array on success, string or null if component is specified.
+	 */
+	public function parseURL( $url, $component = -1 ) {
+		$encodedUrl = preg_replace_callback(
+			'%[^:/@?&=#]+%usD',
+			function ( $matches ) {
+				return urlencode( $matches[0] );
+			},
+			$url
+		);
+
+		if ( $component == -1 ) {
+			$parts = parse_url( $encodedUrl );
+			foreach ( $parts as $name => $value ) {
+				$parts[$name] = urldecode( $value );
+			}
+			return $parts;
+		} else {
+			return urldecode( parse_url( $encodedUrl, $component ) );
+		}
 	}
 
 	/**
