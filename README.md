@@ -4,7 +4,7 @@ Add the following to the composer.json file for your project:
 ```
 {
   "require": {
-     "niharika29/deadlinkchecker": "dev-master"
+     "wikimedia/deadlinkchecker": "dev-master"
   }
 }
 ```
@@ -12,7 +12,7 @@ And then run 'composer update'.
 
 Or using git:
 ```
-$ git clone https://github.com/Niharika29/DeadlinkChecker.git
+$ git clone https://github.com/wikimedia/DeadlinkChecker.git
 ```
 
 
