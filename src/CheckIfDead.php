@@ -333,7 +333,7 @@ class CheckIfDead {
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
-	 * @return string sanitized URLs.  False on failure.
+	 * @return string sanitized URLs.
 	 */
 	public function sanitizeURL( $url ) {
 		// The domain is easily decoded by the DNS handler,
