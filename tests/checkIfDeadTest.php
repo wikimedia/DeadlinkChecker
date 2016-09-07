@@ -20,7 +20,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$this->assertFalse( $obj->isLinkDead( 'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html' ) );
 		$this->assertFalse( $obj->isLinkDead( 'http://content.onlinejacc.org/cgi/content/full/41/9/1633' ) );
 		$this->assertFalse( $obj->isLinkDead( 'http://flysunairexpress.com/#about' ) );
-		$this->assertFalse( $obj->isLinkDead( 'http://кц.рф/ru/' ) );
+		if ( function_exists( 'idn_to_ascii' ) ) {
+			$this->assertFalse( $obj->isLinkDead( 'http://кц.рф/ru/' ) );
+		}
 		// @codingStandardsIgnoreEnd
 	}
 
@@ -80,7 +82,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$this->assertEquals( $obj->sanitizeURL( 'ftp://google.com/#param=1' ), 'ftp://google.com/#param=1' );
 		$this->assertEquals( $obj->sanitizeURL( 'https://zh.wikipedia.org/wiki/猫' ), 'https://zh.wikipedia.org/wiki/%E7%8C%AB' );
 		$this->assertEquals( $obj->sanitizeURL( 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2' ), 'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2' );
-		$this->assertEquals( $obj->sanitizeURL( 'http://кц.рф/ru/' ), 'http://xn--j1ay.xn--p1ai/ru/' );
+		if ( function_exists( 'idn_to_ascii' ) ) {
+			$this->assertEquals( $obj->sanitizeURL( 'http://кц.рф/ru/' ), 'http://xn--j1ay.xn--p1ai/ru/' );
+		}
 		// @codingStandardsIgnoreEnd
 	}
 

@@ -333,7 +333,7 @@ class CheckIfDead {
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
-	 * @return string sanitized URLs.
+	 * @return string sanitized URL
 	 */
 	public function sanitizeURL( $url ) {
 		// The domain is easily decoded by the DNS handler,
@@ -362,8 +362,13 @@ class CheckIfDead {
 		}
 		// Add host
 		if ( isset( $parts['host'] ) ) {
-			// Properly encode the host.  It can't be UTF-8
-			$url .= idn_to_ascii( $parts['host'] );
+			// Properly encode the host.  It can't be UTF-8.
+			// See https://en.wikipedia.org/wiki/Internationalized_domain_name.
+			if ( function_exists( 'idn_to_ascii' ) ) {
+				$url .= idn_to_ascii( $parts['host'] );
+			} else {
+				$url .= $parts['host'];
+			}
 			if ( isset( $parts['port'] ) ) {
 				$url .= ":" . $parts['port'];
 			}
