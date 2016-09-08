@@ -79,6 +79,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$this->assertEquals( $obj->sanitizeURL( 'http://google.com?q=blah' ), 'http://google.com/?q=blah' );
 		$this->assertEquals( $obj->sanitizeURL( '//google.com?q=blah' ), 'https://google.com/?q=blah' );
+		$this->assertEquals( $obj->sanitizeURL( 'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit' ), 'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit' );
 		$this->assertEquals( $obj->sanitizeURL( 'ftp://google.com/#param=1' ), 'ftp://google.com/#param=1' );
 		$this->assertEquals( $obj->sanitizeURL( 'https://zh.wikipedia.org/wiki/猫' ), 'https://zh.wikipedia.org/wiki/%E7%8C%AB' );
 		$this->assertEquals( $obj->sanitizeURL( 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2' ), 'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2' );
