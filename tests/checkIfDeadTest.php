@@ -95,14 +95,6 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	public function testParseURL() {
 		$obj = new CheckIfDead();
 		// @codingStandardsIgnoreStart Line exceeds 100 characters
-		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_SCHEME ), 'http' );
-		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_HOST ), 'кц.рф' );
-		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_PATH ), '/ru/' );
-		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_USER ) );
-		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_PASS ) );
-		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_PORT ) );
-		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_QUERY ) );
-		$this->assertEmpty( $obj->parseURL( 'http://кц.рф/ru/', PHP_URL_FRAGMENT ) );
 		$this->assertEquals( $obj->parseURL( 'http://кц.рф/ru/' ), array( 'scheme' => 'http', 'host' => 'кц.рф', 'path' => '/ru/' ) );
 		$this->assertEquals( $obj->parseURL( 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2' ), array( 'scheme' => 'http', 'host' => 'www.discogs.com', 'path' => '/Various-Kad-Jeknu-Dragačevske-Trube-2' ) );
 		// @codingStandardsIgnoreEnd

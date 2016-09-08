@@ -415,11 +415,11 @@ class CheckIfDead {
 	/**
 	 * Custom parse_url function to support UTF-8 URLs
 	 *
-	 * @param string $url The URL to parse. Invalid characters are replaced by _.
-	 * @param int $component Only return a given component
-	 * @return mixed False on failure, array on success, string or null if component is specified.
+	 * @param string $url The URL to parse
+	 * @return mixed False on failure, array on success. For example:
+	 *     array( 'scheme' => 'https', 'host' => 'hello.com', 'path' => '/en/' ) )
 	 */
-	public function parseURL( $url, $component = -1 ) {
+	public function parseURL( $url ) {
 		$encodedUrl = preg_replace_callback(
 			'%[^:/@?&=#]+%usD',
 			function ( $matches ) {
@@ -428,15 +428,11 @@ class CheckIfDead {
 			$url
 		);
 
-		if ( $component == -1 ) {
-			$parts = parse_url( $encodedUrl );
-			foreach ( $parts as $name => $value ) {
-				$parts[$name] = urldecode( $value );
-			}
-			return $parts;
-		} else {
-			return urldecode( parse_url( $encodedUrl, $component ) );
+		$parts = parse_url( $encodedUrl );
+		foreach ( $parts as $name => $value ) {
+			$parts[$name] = urldecode( $value );
 		}
+		return $parts;
 	}
 
 	/**
