@@ -9,8 +9,8 @@
     "deadlink",
     "link"
   ],
-  "homepage": "https://github.com/Niharika29/DeadlinkChecker",
-  "license": "MIT",
+  "homepage": "https://www.mediawiki.org/wiki/DeadlinkChecker",
+  "license": "GPL-3+",
   "authors": [
     {
       "name": "Niharika Kohli",
