@@ -1,5 +1,8 @@
 {
-  "name": "niharika29/deadlinkchecker",
+  "name": "wikimedia/deadlinkchecker",
+  "replace": {
+    "niharika29/deadlinkchecker": "*"
+  },
   "type": "library",
   "description": "Library for checking if a given link is dead or alive",
   "keywords": [
