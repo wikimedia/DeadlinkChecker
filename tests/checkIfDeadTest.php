@@ -29,6 +29,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html', false ],
 			[ 'http://content.onlinejacc.org/cgi/content/full/41/9/1633', false ],
 			[ 'http://flysunairexpress.com/#about', false ],
+			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
