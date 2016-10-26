@@ -45,7 +45,7 @@ class CheckIfDead {
 	];
 
 	/**
-	 * Check if a single URL is dead by performing a full curl request
+	 * Check if a single URL is dead by performing a curl request
 	 *
 	 * @param string $url URL to check
 	 * @return bool|null Returns null if curl is unable to initialize.
