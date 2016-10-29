@@ -48,12 +48,14 @@ class CheckIfDead {
 	 * Check if a single URL is dead by performing a full curl request
 	 *
 	 * @param string $url URL to check
+	 *
 	 * @return bool|null Returns null if curl is unable to initialize.
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
 		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
+
 		return $deadVal;
 	}
 
@@ -61,6 +63,7 @@ class CheckIfDead {
 	 * Check an array of links
 	 *
 	 * @param array $urls Array of URLs we are checking
+	 *
 	 * @return array|null Returns null if curl is unable to initialize.
 	 *     Otherwise returns an array in which each key is a URL and each value is
 	 *     true (dead) or false (alive).
@@ -108,10 +111,10 @@ class CheckIfDead {
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
-				'http_code' => $headers['http_code'],
+				'http_code'     => $headers['http_code'],
 				'effective_url' => $headers['url'],
-				'curl_error' => $error,
-				'url' => $this->sanitizeURL( $url )
+				'curl_error'    => $error,
+				'url'           => $this->sanitizeURL( $url )
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -130,6 +133,7 @@ class CheckIfDead {
 			// Merge back results from full requests into our deadlinks array
 			$deadLinks = array_merge( $deadLinks, $results );
 		}
+
 		return $deadLinks;
 	}
 
@@ -137,6 +141,7 @@ class CheckIfDead {
 	 * Perform a complete text request, not just for headers
 	 *
 	 * @param array $urls URLs we are checking
+	 *
 	 * @return array with params 'error':curl error number and
 	 *   'result':true(dead)/false(alive) for each element
 	 */
@@ -180,10 +185,10 @@ class CheckIfDead {
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
-				'http_code' => $headers['http_code'],
+				'http_code'     => $headers['http_code'],
 				'effective_url' => $headers['url'],
-				'curl_error' => $error,
-				'url' => $this->sanitizeURL( $url )
+				'curl_error'    => $error,
+				'url'           => $this->sanitizeURL( $url )
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -191,6 +196,7 @@ class CheckIfDead {
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
+
 		return $deadlinks;
 	}
 
@@ -199,11 +205,14 @@ class CheckIfDead {
 	 *
 	 * @param $url String URL we are testing against
 	 * @param bool $full Is this a request for the full page?
+	 *
 	 * @return array Options for curl
 	 */
 	protected function getCurlOptions( $url, $full = false ) {
 		$header = [
+			// @codingStandardsIgnoreStart Line exceeds 100 characters
 			'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+			// @codingStandardsIgnoreEnd
 			'Cache-Control: max-age=0',
 			'Connection: keep-alive',
 			'Keep-Alive: 300',
@@ -220,7 +229,7 @@ class CheckIfDead {
 			CURLOPT_TIMEOUT        => 30,
 			CURLOPT_USERAGENT      => $this->userAgent,
 			CURLOPT_SSL_VERIFYPEER => false,
-			CURLOPT_COOKIEJAR      => sys_get_temp_dir () . "checkifdead.cookies.dat"
+			CURLOPT_COOKIEJAR      => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
 
 		$requestType = $this->getRequestType( $url );
@@ -240,6 +249,7 @@ class CheckIfDead {
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
+
 		return $options;
 	}
 
@@ -247,6 +257,7 @@ class CheckIfDead {
 	 * Get request type
 	 *
 	 * @param $url String URL we are checking against
+	 *
 	 * @return string "FTP" or "HTTP"
 	 */
 	protected function getRequestType( $url ) {
@@ -262,6 +273,7 @@ class CheckIfDead {
 	 *
 	 * @param array $curlInfo Array with values: returned headers, error number, URL checked for
 	 * @param bool $full Was this a request for the full page?
+	 *
 	 * @return bool|null Returns true if dead, false if alive, null if uncertain
 	 */
 	protected function processCurlResults( $curlInfo, $full = false ) {
@@ -286,8 +298,8 @@ class CheckIfDead {
 		}
 		// Check for error messages in redirected URL string
 		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
-		     strpos ( $effectiveUrlClean, '/404/' ) !== false ||
-		     stripos ( $effectiveUrlClean, 'notfound' ) !== false
+		     strpos( $effectiveUrlClean, '/404/' ) !== false ||
+		     stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			return true;
 		}
@@ -313,6 +325,7 @@ class CheckIfDead {
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			return true;
 		}
+
 		// Yay, the checks passed, and the site is alive.
 		return false;
 	}
@@ -321,6 +334,7 @@ class CheckIfDead {
 	 * Compile an array of "possible" root URLs. With subdomain, without subdomain etc.
 	 *
 	 * @param string $url Initial url
+	 *
 	 * @return array Possible root domains (strings)
 	 */
 	protected function getDomainRoots( $url ) {
@@ -341,6 +355,7 @@ class CheckIfDead {
 			$roots[] = implode( '.', array_slice( $parts, -2 ) );
 			$roots[] = implode( '.', array_slice( $parts, -2 ) ) . '/';
 		}
+
 		return $roots;
 	}
 
@@ -348,6 +363,7 @@ class CheckIfDead {
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
+	 *
 	 * @return string sanitized URL
 	 */
 	public function sanitizeURL( $url ) {
@@ -393,12 +409,12 @@ class CheckIfDead {
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-			                 array_map ( "rawurlencode",
-			                             explode ( '/',
-			                                       substr (
-				                                       urldecode ( $parts['path'] ), 1
-			                                       )
-			                             )
+			                 array_map( "rawurlencode",
+			                            explode( '/',
+			                                     substr(
+				                                     urldecode( $parts['path'] ), 1
+			                                     )
+			                            )
 			                 )
 			);
 		}
@@ -412,8 +428,8 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-				                                   array_map ( "urlencode",
-				                                               explode ( '=', $parts['query'][$index], 2 )
+				                                   array_map( "urlencode",
+				                                              explode( '=', $parts['query'][$index], 2 )
 				                                   )
 				);
 			}
@@ -423,8 +439,9 @@ class CheckIfDead {
 		}
 		if ( isset( $parts['fragment'] ) ) {
 			// We don't need to encode the fragment, that's handled client side anyways.
-			$url .= "#".$parts['fragment'];
+			$url .= "#" . $parts['fragment'];
 		}
+
 		return $url;
 	}
 
@@ -432,6 +449,7 @@ class CheckIfDead {
 	 * Custom parse_url function to support UTF-8 URLs
 	 *
 	 * @param string $url The URL to parse
+	 *
 	 * @return mixed False on failure, array on success. For example:
 	 *     array( 'scheme' => 'https', 'host' => 'hello.com', 'path' => '/en/' ) )
 	 */
@@ -448,6 +466,7 @@ class CheckIfDead {
 		foreach ( $parts as $name => $value ) {
 			$parts[$name] = urldecode( $value );
 		}
+
 		return $parts;
 	}
 
@@ -455,6 +474,7 @@ class CheckIfDead {
 	 * Remove scheme, 'www', URL fragment, leading forward slashes and trailing slash
 	 *
 	 * @param string $input
+	 *
 	 * @return string Cleaned url string
 	 */
 	public function cleanURL( $input ) {
@@ -464,6 +484,7 @@ class CheckIfDead {
 		$url = preg_replace( '/#.*/', '', $url );
 		// trailing slash
 		$url = preg_replace( '{/$}', '', $url );
+
 		return $url;
 	}
 }
