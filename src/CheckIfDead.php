@@ -202,14 +202,27 @@ class CheckIfDead {
 	 * @return array Options for curl
 	 */
 	protected function getCurlOptions( $url, $full = false ) {
-		$options = [
-			CURLOPT_URL => $url,
-			CURLOPT_HEADER => 1,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_TIMEOUT => 30,
-			CURLOPT_USERAGENT => $this->userAgent
+		$header = [
+			'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+			'Cache-Control: max-age=0',
+			'Connection: keep-alive',
+			'Keep-Alive: 300',
+			'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+			'Accept-Language: en-us,en;q=0.5',
+			'Pragma: '
 		];
+		$options = [
+			CURLOPT_URL            => $url,
+			CURLOPT_HEADER         => 1,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_AUTOREFERER    => true,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_TIMEOUT        => 30,
+			CURLOPT_USERAGENT      => $this->userAgent,
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_COOKIEJAR      => sys_get_temp_dir () . "checkifdead.cookies.dat"
+		];
+
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
@@ -222,6 +235,8 @@ class CheckIfDead {
 			$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
+			$options[CURLOPT_HTTPHEADER] = $header;
+			$options[CURLOPT_ENCODING] = '';
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
@@ -271,8 +286,8 @@ class CheckIfDead {
 		}
 		// Check for error messages in redirected URL string
 		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
-			strpos( $effectiveUrlClean, '/404/' ) !== false ||
-			stripos( $effectiveUrlClean, 'notfound' ) !== false
+		     strpos ( $effectiveUrlClean, '/404/' ) !== false ||
+		     stripos ( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			return true;
 		}
@@ -378,12 +393,13 @@ class CheckIfDead {
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-				array_map( "rawurlencode",
-					explode( '/',
-						substr(
-							urldecode( $parts['path'] ), 1 )
-					)
-				)
+			                 array_map ( "rawurlencode",
+			                             explode ( '/',
+			                                       substr (
+				                                       urldecode ( $parts['path'] ), 1
+			                                       )
+			                             )
+			                 )
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
@@ -396,9 +412,9 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-					array_map( "urlencode",
-						explode( '=', $parts['query'][$index], 2 )
-					)
+				                                   array_map ( "urlencode",
+				                                               explode ( '=', $parts['query'][$index], 2 )
+				                                   )
 				);
 			}
 			// Put the query string back together.
