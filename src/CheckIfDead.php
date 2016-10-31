@@ -250,13 +250,13 @@ class CheckIfDead {
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-			                 array_map( "rawurlencode",
-			                            explode( '/',
-			                                     substr(
-				                                     urldecode( $parts['path'] ), 1
-			                                     )
-			                            )
-			                 )
+						array_map( "rawurlencode",
+							explode( '/',
+								substr(
+									urldecode( $parts['path'] ), 1
+								)
+							)
+						)
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
