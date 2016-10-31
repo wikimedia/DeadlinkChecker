@@ -325,6 +325,34 @@ class CheckIfDead {
 	}
 
 	/**
+	 * Compile an array of "possible" root URLs. With subdomain, without subdomain etc.
+	 *
+	 * @param string $url Initial url
+	 * @return array Possible root domains (strings)
+	 */
+	protected function getDomainRoots( $url ) {
+		$roots = [];
+		$pieces = parse_url( $url );
+		if ( !isset( $pieces['host'], $pieces['host'] ) ) {
+			return [];
+		}
+		$roots[] = $pieces['host'];
+		$roots[] = $pieces['host'] . '/';
+		$domain = isset( $pieces['host'] ) ? $pieces['host'] : '';
+		if ( preg_match( '/(?P<domain>[a-z0-9][a-z0-9\-]{1,63}\.[a-z\.]{2,6})$/i', $domain, $regs ) ) {
+			$roots[] = $regs['domain'];
+			$roots[] = $regs['domain'] . '/';
+		}
+		$parts = explode( '.', $pieces['host'] );
+		if ( count( $parts ) >= 3 ) {
+			$roots[] = implode( '.', array_slice( $parts, -2 ) );
+			$roots[] = implode( '.', array_slice( $parts, -2 ) ) . '/';
+		}
+
+		return $roots;
+	}
+
+	/**
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
 	 * @param $url URL to sanitize
@@ -448,33 +476,5 @@ class CheckIfDead {
 		$url = preg_replace( '{/$}', '', $url );
 
 		return $url;
-	}
-
-	/**
-	 * Compile an array of "possible" root URLs. With subdomain, without subdomain etc.
-	 *
-	 * @param string $url Initial url
-	 * @return array Possible root domains (strings)
-	 */
-	protected function getDomainRoots( $url ) {
-		$roots = [];
-		$pieces = parse_url( $url );
-		if ( !isset( $pieces['host'], $pieces['host'] ) ) {
-			return [];
-		}
-		$roots[] = $pieces['host'];
-		$roots[] = $pieces['host'] . '/';
-		$domain = isset( $pieces['host'] ) ? $pieces['host'] : '';
-		if ( preg_match( '/(?P<domain>[a-z0-9][a-z0-9\-]{1,63}\.[a-z\.]{2,6})$/i', $domain, $regs ) ) {
-			$roots[] = $regs['domain'];
-			$roots[] = $regs['domain'] . '/';
-		}
-		$parts = explode( '.', $pieces['host'] );
-		if ( count( $parts ) >= 3 ) {
-			$roots[] = implode( '.', array_slice( $parts, -2 ) );
-			$roots[] = implode( '.', array_slice( $parts, -2 ) ) . '/';
-		}
-
-		return $roots;
 	}
 }
