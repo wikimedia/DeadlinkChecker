@@ -54,6 +54,7 @@ class CheckIfDead {
 	public function isLinkDead( $url ) {
 		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
+
 		return $deadVal;
 	}
 
@@ -108,10 +109,10 @@ class CheckIfDead {
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
-				'http_code' => $headers['http_code'],
+				'http_code'     => $headers['http_code'],
 				'effective_url' => $headers['url'],
-				'curl_error' => $error,
-				'url' => $this->sanitizeURL( $url )
+				'curl_error'    => $error,
+				'url'           => $this->sanitizeURL( $url )
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -130,6 +131,7 @@ class CheckIfDead {
 			// Merge back results from full requests into our deadlinks array
 			$deadLinks = array_merge( $deadLinks, $results );
 		}
+
 		return $deadLinks;
 	}
 
@@ -180,10 +182,10 @@ class CheckIfDead {
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
-				'http_code' => $headers['http_code'],
+				'http_code'     => $headers['http_code'],
 				'effective_url' => $headers['url'],
-				'curl_error' => $error,
-				'url' => $this->sanitizeURL( $url )
+				'curl_error'    => $error,
+				'url'           => $this->sanitizeURL( $url )
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -191,6 +193,7 @@ class CheckIfDead {
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
+
 		return $deadlinks;
 	}
 
@@ -202,14 +205,29 @@ class CheckIfDead {
 	 * @return array Options for curl
 	 */
 	protected function getCurlOptions( $url, $full = false ) {
-		$options = [
-			CURLOPT_URL => $url,
-			CURLOPT_HEADER => 1,
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_TIMEOUT => 30,
-			CURLOPT_USERAGENT => $this->userAgent
+		$header = [
+			// @codingStandardsIgnoreStart Line exceeds 100 characters
+			'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+			// @codingStandardsIgnoreEnd
+			'Cache-Control: max-age=0',
+			'Connection: keep-alive',
+			'Keep-Alive: 300',
+			'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+			'Accept-Language: en-us,en;q=0.5',
+			'Pragma: '
 		];
+		$options = [
+			CURLOPT_URL            => $url,
+			CURLOPT_HEADER         => 1,
+			CURLOPT_RETURNTRANSFER => true,
+			CURLOPT_AUTOREFERER    => true,
+			CURLOPT_FOLLOWLOCATION => true,
+			CURLOPT_TIMEOUT        => 30,
+			CURLOPT_USERAGENT      => $this->userAgent,
+			CURLOPT_SSL_VERIFYPEER => false,
+			CURLOPT_COOKIEJAR      => sys_get_temp_dir() . "checkifdead.cookies.dat"
+		];
+
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
@@ -222,9 +240,12 @@ class CheckIfDead {
 			$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
+			$options[CURLOPT_HTTPHEADER] = $header;
+			$options[CURLOPT_ENCODING] = '';
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
+
 		return $options;
 	}
 
@@ -298,6 +319,7 @@ class CheckIfDead {
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			return true;
 		}
+
 		// Yay, the checks passed, and the site is alive.
 		return false;
 	}
@@ -326,6 +348,7 @@ class CheckIfDead {
 			$roots[] = implode( '.', array_slice( $parts, -2 ) );
 			$roots[] = implode( '.', array_slice( $parts, -2 ) ) . '/';
 		}
+
 		return $roots;
 	}
 
@@ -378,12 +401,13 @@ class CheckIfDead {
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-				array_map( "rawurlencode",
-					explode( '/',
-						substr(
-							urldecode( $parts['path'] ), 1 )
-					)
-				)
+						array_map( "rawurlencode",
+							explode( '/',
+								substr(
+									urldecode( $parts['path'] ), 1
+								)
+							)
+						)
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
@@ -396,9 +420,9 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-					array_map( "urlencode",
-						explode( '=', $parts['query'][$index], 2 )
-					)
+											array_map( "urlencode",
+												explode( '=', $parts['query'][$index], 2 )
+											)
 				);
 			}
 			// Put the query string back together.
@@ -407,8 +431,9 @@ class CheckIfDead {
 		}
 		if ( isset( $parts['fragment'] ) ) {
 			// We don't need to encode the fragment, that's handled client side anyways.
-			$url .= "#".$parts['fragment'];
+			$url .= "#" . $parts['fragment'];
 		}
+
 		return $url;
 	}
 
@@ -432,6 +457,7 @@ class CheckIfDead {
 		foreach ( $parts as $name => $value ) {
 			$parts[$name] = urldecode( $value );
 		}
+
 		return $parts;
 	}
 
@@ -448,6 +474,7 @@ class CheckIfDead {
 		$url = preg_replace( '/#.*/', '', $url );
 		// trailing slash
 		$url = preg_replace( '{/$}', '', $url );
+
 		return $url;
 	}
 }

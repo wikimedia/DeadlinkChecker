@@ -26,22 +26,31 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc', false ],
 			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2/release/1173051', false ],
 			[ 'https://astraldynamics.com', false ],
-			[ 'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html', false ],
+			[
+				'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html',
+				false
+			],
 			[ 'http://content.onlinejacc.org/cgi/content/full/41/9/1633', false ],
 			[ 'http://flysunairexpress.com/#about', false ],
 			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
+			[ 'http://list.english-heritage.org.uk/resultsingle.aspx?uid=1284140', false ],
+			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
 			[ 'http://worldchiropracticalliance.org/resources/greens/green4.htm', true ],
 			[ 'http://www.copart.co.uk/c2/specialSearch.html?_eventId=getLot&execution=e1s2&lotId=10543580', true ],
 			[ 'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html', true ],
-			[ 'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=', true ],
+			[
+				'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=',
+				true
+			],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
 			$tests[] = [ 'http://кц.рф/ru/', false ];
 		}
+
 		return $tests;
 	}
 
@@ -73,11 +82,11 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 
 	public function provideCleanURL() {
 		return [
-			[ 'http://google.com?q=blah' , 'google.com?q=blah' ],
-			[ 'https://www.google.com/' , 'google.com' ],
-			[ 'ftp://google.com/#param=1' , 'google.com' ],
-			[ '//google.com' , 'google.com' ],
-			[ 'www.google.www.com' , 'google.www.com' ],
+			[ 'http://google.com?q=blah', 'google.com?q=blah' ],
+			[ 'https://www.google.com/', 'google.com' ],
+			[ 'ftp://google.com/#param=1', 'google.com' ],
+			[ '//google.com', 'google.com' ],
+			[ 'www.google.www.com', 'google.www.com' ],
 		];
 	}
 
@@ -98,15 +107,22 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		$tests = [
 			[ 'http://google.com?q=blah', 'http://google.com/?q=blah' ],
 			[ '//google.com?q=blah', 'https://google.com/?q=blah' ],
-			[ 'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit', 'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit' ],
+			[
+				'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit',
+				'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit'
+			],
 			[ 'ftp://google.com/#param=1', 'ftp://google.com/#param=1' ],
 			[ 'https://zh.wikipedia.org/wiki/猫', 'https://zh.wikipedia.org/wiki/%E7%8C%AB' ],
-			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2', 'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2' ],
+			[
+				'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2',
+				'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2'
+			],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
 			$tests[] = [ 'http://кц.рф/ru/', 'http://xn--j1ay.xn--p1ai/ru/' ];
 		}
+
 		return $tests;
 	}
 
@@ -124,16 +140,20 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 
 	public function provideParseURL() {
 		return [
-			[ 'http://кц.рф/ru/', [
+			[
+				'http://кц.рф/ru/', [
 				'scheme' => 'http',
-				'host' => 'кц.рф',
-				'path' => '/ru/',
-			] ],
-			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2', [
+				'host'   => 'кц.рф',
+				'path'   => '/ru/',
+			]
+			],
+			[
+				'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2', [
 				'scheme' => 'http',
-				'host' => 'www.discogs.com',
-				'path' => '/Various-Kad-Jeknu-Dragačevske-Trube-2',
-			] ],
+				'host'   => 'www.discogs.com',
+				'path'   => '/Various-Kad-Jeknu-Dragačevske-Trube-2',
+			]
+			],
 		];
 	}
 }
