@@ -136,6 +136,68 @@ class CheckIfDead {
 	}
 
 	/**
+	 * Perform a complete text request, not just for headers
+	 *
+	 * @param array $urls URLs we are checking
+	 * @return array with params 'error':curl error number and
+	 *   'result':true(dead)/false(alive) for each element
+	 */
+	protected function performFullRequest( $urls ) {
+		// Create multiple curl handle
+		$multicurl_resource = curl_multi_init();
+		if ( $multicurl_resource === false ) {
+			return false;
+		}
+		$curl_instances = [];
+		$deadlinks = [];
+		foreach ( $urls as $id => $url ) {
+			$curl_instances[$id] = curl_init();
+			if ( $curl_instances[$id] === false ) {
+				return false;
+			}
+			// Get appropriate curl options
+			curl_setopt_array(
+				$curl_instances[$id],
+				$this->getCurlOptions( $this->sanitizeURL( $url ), true )
+			);
+			// Add the instance handle
+			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
+		}
+		// Let's do the CURL operations
+		$active = null;
+		do {
+			$mrc = curl_multi_exec( $multicurl_resource, $active );
+		} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
+		while ( $active && $mrc == CURLM_OK ) {
+			if ( curl_multi_select( $multicurl_resource ) == -1 ) {
+				// To prevent CPU spike
+				usleep( 100 );
+			}
+			do {
+				$mrc = curl_multi_exec( $multicurl_resource, $active );
+			} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
+		}
+		// Let's process our curl results and extract the useful information
+		foreach ( $urls as $id => $url ) {
+			$headers = curl_getinfo( $curl_instances[$id] );
+			$error = curl_errno( $curl_instances[$id] );
+			$curlInfo = [
+				'http_code'     => $headers['http_code'],
+				'effective_url' => $headers['url'],
+				'curl_error'    => $error,
+				'url'           => $this->sanitizeURL( $url )
+			];
+			// Remove each of the individual handles
+			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
+			$deadlinks[$url] = $this->processCurlResults( $curlInfo, true );
+		}
+		// Close resource
+		curl_multi_close( $multicurl_resource );
+
+		return $deadlinks;
+	}
+
+	/**
 	 * Get CURL options
 	 *
 	 * @param $url String URL we are testing against
@@ -199,6 +261,67 @@ class CheckIfDead {
 		} else {
 			return "HTTP";
 		}
+	}
+
+	/**
+	 * Process the returned headers
+	 *
+	 * @param array $curlInfo Array with values: returned headers, error number, URL checked for
+	 * @param bool $full Was this a request for the full page?
+	 * @return bool|null Returns true if dead, false if alive, null if uncertain
+	 */
+	protected function processCurlResults( $curlInfo, $full = false ) {
+		// Determine if we are using FTP or HTTP
+		$requestType = $this->getRequestType( $curlInfo['url'] );
+		// Get HTTP code returned
+		$httpCode = $curlInfo['http_code'];
+		// Get final URL
+		$effectiveUrl = $curlInfo['effective_url'];
+		// Clean final url, removing scheme, 'www', and trailing slash
+		$effectiveUrlClean = $this->cleanURL( $effectiveUrl );
+		// Get an array of possible root urls
+		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
+		if ( $httpCode >= 400 && $httpCode < 600 ) {
+			if ( $full ) {
+				return true;
+			} else {
+				// Some servers don't support NOBODY requests, so if an HTTP error code
+				// is returned, we'll check the URL again with a full page request.
+				return null;
+			}
+		}
+		// Check for error messages in redirected URL string
+		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
+		     strpos( $effectiveUrlClean, '/404/' ) !== false ||
+		     stripos( $effectiveUrlClean, 'notfound' ) !== false
+		) {
+			return true;
+		}
+		// Check if there was a redirect by comparing final URL with original URL
+		if ( $effectiveUrlClean != $this->cleanURL( $curlInfo['url'] ) ) {
+			// Check against possible roots
+			foreach ( $possibleRoots as $root ) {
+				// We found a match with final url and a possible root url
+				if ( $root == $effectiveUrlClean ) {
+					return true;
+				}
+			}
+		}
+		// If there was an error during the CURL process, check if the code
+		// returned is a server side problem
+		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
+			return true;
+		}
+		// Check for valid non-error codes for HTTP or FTP
+		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
+			return true;
+			// Check for valid non-error codes for FTP
+		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
+			return true;
+		}
+
+		// Yay, the checks passed, and the site is alive.
+		return false;
 	}
 
 	/**
@@ -311,67 +434,6 @@ class CheckIfDead {
 	}
 
 	/**
-	 * Process the returned headers
-	 *
-	 * @param array $curlInfo Array with values: returned headers, error number, URL checked for
-	 * @param bool $full Was this a request for the full page?
-	 * @return bool|null Returns true if dead, false if alive, null if uncertain
-	 */
-	protected function processCurlResults( $curlInfo, $full = false ) {
-		// Determine if we are using FTP or HTTP
-		$requestType = $this->getRequestType( $curlInfo['url'] );
-		// Get HTTP code returned
-		$httpCode = $curlInfo['http_code'];
-		// Get final URL
-		$effectiveUrl = $curlInfo['effective_url'];
-		// Clean final url, removing scheme, 'www', and trailing slash
-		$effectiveUrlClean = $this->cleanURL( $effectiveUrl );
-		// Get an array of possible root urls
-		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
-		if ( $httpCode >= 400 && $httpCode < 600 ) {
-			if ( $full ) {
-				return true;
-			} else {
-				// Some servers don't support NOBODY requests, so if an HTTP error code
-				// is returned, we'll check the URL again with a full page request.
-				return null;
-			}
-		}
-		// Check for error messages in redirected URL string
-		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
-		     strpos( $effectiveUrlClean, '/404/' ) !== false ||
-		     stripos( $effectiveUrlClean, 'notfound' ) !== false
-		) {
-			return true;
-		}
-		// Check if there was a redirect by comparing final URL with original URL
-		if ( $effectiveUrlClean != $this->cleanURL( $curlInfo['url'] ) ) {
-			// Check against possible roots
-			foreach ( $possibleRoots as $root ) {
-				// We found a match with final url and a possible root url
-				if ( $root == $effectiveUrlClean ) {
-					return true;
-				}
-			}
-		}
-		// If there was an error during the CURL process, check if the code
-		// returned is a server side problem
-		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
-			return true;
-		}
-		// Check for valid non-error codes for HTTP or FTP
-		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
-			return true;
-			// Check for valid non-error codes for FTP
-		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
-			return true;
-		}
-
-		// Yay, the checks passed, and the site is alive.
-		return false;
-	}
-
-	/**
 	 * Remove scheme, 'www', URL fragment, leading forward slashes and trailing slash
 	 *
 	 * @param string $input
@@ -414,67 +476,5 @@ class CheckIfDead {
 		}
 
 		return $roots;
-	}
-
-	/**
-	 * Perform a complete text request, not just for headers
-	 *
-	 * @param array $urls URLs we are checking
-	 * @return array with params 'error':curl error number and
-	 *   'result':true(dead)/false(alive) for each element
-	 */
-	protected function performFullRequest( $urls ) {
-		// Create multiple curl handle
-		$multicurl_resource = curl_multi_init();
-		if ( $multicurl_resource === false ) {
-			return false;
-		}
-		$curl_instances = [];
-		$deadlinks = [];
-		foreach ( $urls as $id => $url ) {
-			$curl_instances[$id] = curl_init();
-			if ( $curl_instances[$id] === false ) {
-				return false;
-			}
-			// Get appropriate curl options
-			curl_setopt_array(
-				$curl_instances[$id],
-				$this->getCurlOptions( $this->sanitizeURL( $url ), true )
-			);
-			// Add the instance handle
-			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
-		}
-		// Let's do the CURL operations
-		$active = null;
-		do {
-			$mrc = curl_multi_exec( $multicurl_resource, $active );
-		} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
-		while ( $active && $mrc == CURLM_OK ) {
-			if ( curl_multi_select( $multicurl_resource ) == -1 ) {
-				// To prevent CPU spike
-				usleep( 100 );
-			}
-			do {
-				$mrc = curl_multi_exec( $multicurl_resource, $active );
-			} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
-		}
-		// Let's process our curl results and extract the useful information
-		foreach ( $urls as $id => $url ) {
-			$headers = curl_getinfo( $curl_instances[$id] );
-			$error = curl_errno( $curl_instances[$id] );
-			$curlInfo = [
-				'http_code'     => $headers['http_code'],
-				'effective_url' => $headers['url'],
-				'curl_error'    => $error,
-				'url'           => $this->sanitizeURL( $url )
-			];
-			// Remove each of the individual handles
-			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
-			$deadlinks[$url] = $this->processCurlResults( $curlInfo, true );
-		}
-		// Close resource
-		curl_multi_close( $multicurl_resource );
-
-		return $deadlinks;
 	}
 }
