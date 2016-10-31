@@ -269,9 +269,9 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-				                                   array_map( "urlencode",
-				                                              explode( '=', $parts['query'][$index], 2 )
-				                                   )
+											array_map( "urlencode",
+												explode( '=', $parts['query'][$index], 2 )
+											)
 				);
 			}
 			// Put the query string back together.
