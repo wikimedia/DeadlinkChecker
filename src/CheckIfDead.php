@@ -293,8 +293,8 @@ class CheckIfDead {
 		}
 		// Check for error messages in redirected URL string
 		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
-			 strpos( $effectiveUrlClean, '/404/' ) !== false ||
-			 stripos( $effectiveUrlClean, 'notfound' ) !== false
+			strpos( $effectiveUrlClean, '/404/' ) !== false ||
+			stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			return true;
 		}
@@ -402,13 +402,13 @@ class CheckIfDead {
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-							 array_map( "rawurlencode",
-										explode( '/',
-												 substr(
-													 urldecode( $parts['path'] ), 1
-												 )
-										)
-							 )
+						array_map( "rawurlencode",
+							explode( '/',
+								substr(
+									urldecode( $parts['path'] ), 1
+								)
+							)
+						)
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
@@ -421,9 +421,9 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-												   array_map( "urlencode",
-															  explode( '=', $parts['query'][$index], 2 )
-												   )
+											array_map( "urlencode",
+												explode( '=', $parts['query'][$index], 2 )
+											)
 				);
 			}
 			// Put the query string back together.
