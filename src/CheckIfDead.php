@@ -1,11 +1,12 @@
 <?php
-
 /**
  * Copyright (c) 2016, Niharika Kohli
  *
  * @license https://www.gnu.org/licenses/gpl.txt
  */
 namespace Wikimedia\DeadlinkChecker;
+
+define( 'CHECKIFDEADVERSION', '1.1' );
 
 class CheckIfDead {
 
@@ -14,8 +15,8 @@ class CheckIfDead {
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
-	// @codingStandardsIgnoreEnd
 
+	// @codingStandardsIgnoreEnd
 	/**
 	 *  HTTP codes that do not indicate a dead link
 	 */
@@ -52,9 +53,8 @@ class CheckIfDead {
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
 	public function isLinkDead( $url ) {
-		$deadVal = $this->areLinksDead( [ $url ] );
+		$deadVal = $this->areLinksDead( [$url] );
 		$deadVal = $deadVal[$url];
-
 		return $deadVal;
 	}
 
@@ -81,7 +81,6 @@ class CheckIfDead {
 			if ( $curl_instances[$id] === false ) {
 				return null;
 			}
-
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
@@ -109,10 +108,10 @@ class CheckIfDead {
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
-				'http_code'     => $headers['http_code'],
+				'http_code' => $headers['http_code'],
 				'effective_url' => $headers['url'],
-				'curl_error'    => $error,
-				'url'           => $this->sanitizeURL( $url )
+				'curl_error' => $error,
+				'url' => $this->sanitizeURL( $url )
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -131,7 +130,6 @@ class CheckIfDead {
 			// Merge back results from full requests into our deadlinks array
 			$deadLinks = array_merge( $deadLinks, $results );
 		}
-
 		return $deadLinks;
 	}
 
@@ -182,10 +180,10 @@ class CheckIfDead {
 			$headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$curlInfo = [
-				'http_code'     => $headers['http_code'],
+				'http_code' => $headers['http_code'],
 				'effective_url' => $headers['url'],
-				'curl_error'    => $error,
-				'url'           => $this->sanitizeURL( $url )
+				'curl_error' => $error,
+				'url' => $this->sanitizeURL( $url )
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -193,7 +191,6 @@ class CheckIfDead {
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
-
 		return $deadlinks;
 	}
 
@@ -217,17 +214,16 @@ class CheckIfDead {
 			'Pragma: '
 		];
 		$options = [
-			CURLOPT_URL            => $url,
-			CURLOPT_HEADER         => 1,
+			CURLOPT_URL => $url,
+			CURLOPT_HEADER => 1,
 			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_AUTOREFERER    => true,
+			CURLOPT_AUTOREFERER => true,
 			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_TIMEOUT        => 30,
-			CURLOPT_USERAGENT      => $this->userAgent,
+			CURLOPT_TIMEOUT => 30,
+			CURLOPT_USERAGENT => $this->userAgent,
 			CURLOPT_SSL_VERIFYPEER => false,
-			CURLOPT_COOKIEJAR      => sys_get_temp_dir() . "checkifdead.cookies.dat"
+			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
-
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
@@ -245,7 +241,6 @@ class CheckIfDead {
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
-
 		return $options;
 	}
 
@@ -292,8 +287,8 @@ class CheckIfDead {
 		}
 		// Check for error messages in redirected URL string
 		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
-		     strpos( $effectiveUrlClean, '/404/' ) !== false ||
-		     stripos( $effectiveUrlClean, 'notfound' ) !== false
+			 strpos( $effectiveUrlClean, '/404/' ) !== false ||
+			 stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			return true;
 		}
@@ -319,7 +314,6 @@ class CheckIfDead {
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			return true;
 		}
-
 		// Yay, the checks passed, and the site is alive.
 		return false;
 	}
@@ -348,7 +342,6 @@ class CheckIfDead {
 			$roots[] = implode( '.', array_slice( $parts, -2 ) );
 			$roots[] = implode( '.', array_slice( $parts, -2 ) ) . '/';
 		}
-
 		return $roots;
 	}
 
@@ -363,10 +356,8 @@ class CheckIfDead {
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
 		// can't handle decoded characters.
-
 		// Break up the URL first
 		$parts = $this->parseURL( $url );
-
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -401,13 +392,13 @@ class CheckIfDead {
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-						array_map( "rawurlencode",
-							explode( '/',
-								substr(
-									urldecode( $parts['path'] ), 1
-								)
-							)
-						)
+							 array_map( "rawurlencode",
+										explode( '/',
+												 substr(
+													 urldecode( $parts['path'] ), 1
+												 )
+										)
+							 )
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
@@ -420,9 +411,9 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-											array_map( "urlencode",
-												explode( '=', $parts['query'][$index], 2 )
-											)
+												   array_map( "urlencode",
+															  explode( '=', $parts['query'][$index], 2 )
+												   )
 				);
 			}
 			// Put the query string back together.
@@ -433,7 +424,6 @@ class CheckIfDead {
 			// We don't need to encode the fragment, that's handled client side anyways.
 			$url .= "#" . $parts['fragment'];
 		}
-
 		return $url;
 	}
 
@@ -452,12 +442,10 @@ class CheckIfDead {
 			},
 			$url
 		);
-
 		$parts = parse_url( $encodedUrl );
 		foreach ( $parts as $name => $value ) {
 			$parts[$name] = urldecode( $value );
 		}
-
 		return $parts;
 	}
 
@@ -474,7 +462,6 @@ class CheckIfDead {
 		$url = preg_replace( '/#.*/', '', $url );
 		// trailing slash
 		$url = preg_replace( '{/$}', '', $url );
-
 		return $url;
 	}
 }
