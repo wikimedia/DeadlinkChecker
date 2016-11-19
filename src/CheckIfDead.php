@@ -6,6 +6,7 @@
  * @license https://www.gnu.org/licenses/gpl.txt
  */
 namespace Wikimedia\DeadlinkChecker;
+
 define( 'CHECKIFDEADVERSION', '1.1' );
 
 class CheckIfDead {
