@@ -47,19 +47,20 @@ class CheckIfDead {
 	];
 
 	/**
+	 * A collection of errors encountered that resulted in the URL coming back dead.
+	 */
+	protected $errors = [];
+
+	/**
 	 * Check if a single URL is dead by performing a curl request
 	 *
 	 * @param string $url URL to check
-	 * @param array $errors Pass back reason encountered for dead result
 	 * @return bool|null Returns null if curl is unable to initialize.
 	 *     Otherwise returns true (dead) or false (alive).
 	 */
-	public function isLinkDead( $url, &$error = "" ) {
-		$deadVal = $this->areLinksDead( [ $url ], $errors );
+	public function isLinkDead( $url ) {
+		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
-		if ( $deadVal === true ) {
-			$error = $errors[$url];
-		}
 
 		return $deadVal;
 	}
@@ -68,12 +69,11 @@ class CheckIfDead {
 	 * Check an array of links
 	 *
 	 * @param array $urls Array of URLs we are checking
-	 * @param array $errors Pass back reason encountered for dead result
 	 * @return array|null Returns null if curl is unable to initialize.
 	 *     Otherwise returns an array in which each key is a URL and each value is
 	 *     true (dead) or false (alive).
 	 */
-	public function areLinksDead( $urls, &$errors = [] ) {
+	public function areLinksDead( $urls ) {
 		// Array of URLs we want to send in for a full check
 		$fullCheckURLs = [];
 		// Create multiple curl handle
@@ -126,7 +126,7 @@ class CheckIfDead {
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
 			// Deduce whether the site is dead or alive
-			$deadLinks[$url] = $this->processCurlResults( $curlInfo, false, $errors );
+			$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
 			// If we got back a null, we should do a full page request
 			if ( is_null( $deadLinks[$url] ) ) {
 				$fullCheckURLs[] = $url;
@@ -136,7 +136,7 @@ class CheckIfDead {
 		curl_multi_close( $multicurl_resource );
 		// Do full page requests for URLs that returned null
 		if ( !empty( $fullCheckURLs ) ) {
-			$results = $this->performFullRequest( $fullCheckURLs, $errors );
+			$results = $this->performFullRequest( $fullCheckURLs );
 			// Merge back results from full requests into our deadlinks array
 			$deadLinks = array_merge( $deadLinks, $results );
 		}
@@ -148,11 +148,10 @@ class CheckIfDead {
 	 * Perform a complete text request, not just for headers
 	 *
 	 * @param array $urls URLs we are checking
-	 * @param array $errors Pass back reason encountered for dead result
 	 * @return array with params 'error':curl error number and
 	 *   'result':true(dead)/false(alive) for each element
 	 */
-	protected function performFullRequest( $urls, &$errors = [] ) {
+	protected function performFullRequest( $urls ) {
 		// Create multiple curl handle
 		$multicurl_resource = curl_multi_init();
 		if ( $multicurl_resource === false ) {
@@ -202,7 +201,7 @@ class CheckIfDead {
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
-			$deadlinks[$url] = $this->processCurlResults( $curlInfo, true, $errors );
+			$deadlinks[$url] = $this->processCurlResults( $curlInfo, true );
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
@@ -280,10 +279,9 @@ class CheckIfDead {
 	 *
 	 * @param array $curlInfo Array with values: returned headers, error number, URL checked for
 	 * @param bool $full Was this a request for the full page?
-	 * @param array $errors Pass back reason encountered for dead result
 	 * @return bool|null Returns true if dead, false if alive, null if uncertain
 	 */
-	protected function processCurlResults( $curlInfo, $full = false, &$errors = [] ) {
+	protected function processCurlResults( $curlInfo, $full = false ) {
 		// Determine if we are using FTP or HTTP
 		$requestType = $this->getRequestType( $curlInfo['url'] );
 		// Get HTTP code returned
@@ -309,7 +307,7 @@ class CheckIfDead {
 			strpos( $effectiveUrlClean, '/404/' ) !== false ||
 			stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
-			$errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
+			$this->errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
 			return true;
 		}
 		// Check if there was a redirect by comparing final URL with original URL
@@ -318,7 +316,7 @@ class CheckIfDead {
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
-					$errors[$curlInfo['rawurl']][] = "REDIRECT TO ROOT";
+					$this->errors[$curlInfo['rawurl']][] = "REDIRECT TO ROOT";
 					return true;
 				}
 			}
@@ -326,17 +324,17 @@ class CheckIfDead {
 		// If there was an error during the CURL process, check if the code
 		// returned is a server side problem
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
-			$errors[$curlInfo['rawurl']] =
+			$this->errors[$curlInfo['rawurl']] =
 				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
-			$errors[$curlInfo['rawurl']] = "HTTP CODE: $httpCode";
+			$this->errors[$curlInfo['rawurl']] = "HTTP CODE: $httpCode";
 			return true;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
-			$errors[$curlInfo['rawurl']] = "FTP CODE: $httpCode";
+			$this->errors[$curlInfo['rawurl']] = "FTP CODE: $httpCode";
 			return true;
 		}
 
@@ -496,5 +494,14 @@ class CheckIfDead {
 		$url = preg_replace( '{/$}', '', $url );
 
 		return $url;
+	}
+
+	/**
+	 * Returns the errors encountered on URLs that resulted in a dead response
+	 *
+	 * @return array All the errors indexed by URL.
+	 */
+	public function getErrors() {
+		return $this->errors;
 	}
 }
