@@ -6,6 +6,7 @@
  * @license https://www.gnu.org/licenses/gpl.txt
  */
 namespace Wikimedia\DeadlinkChecker;
+
 define( 'CHECKIFDEADVERSION', '1.1.1' );
 
 class CheckIfDead {
@@ -56,7 +57,9 @@ class CheckIfDead {
 	public function isLinkDead( $url, &$error = "" ) {
 		$deadVal = $this->areLinksDead( [ $url ], $errors );
 		$deadVal = $deadVal[$url];
-		if( $deadVal === true ) $error = $errors[$url];
+		if ( $deadVal === true ) {
+			$error = $errors[$url];
+		}
 
 		return $deadVal;
 	}
@@ -323,7 +326,8 @@ class CheckIfDead {
 		// If there was an error during the CURL process, check if the code
 		// returned is a server side problem
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
-			$errors[$curlInfo['rawurl']] = "Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
+			$errors[$curlInfo['rawurl']] =
+				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
