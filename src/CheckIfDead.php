@@ -88,6 +88,7 @@ class CheckIfDead {
 			if ( $curl_instances[$id] === false ) {
 				return null;
 			}
+
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
@@ -239,6 +240,7 @@ class CheckIfDead {
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
+
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
@@ -294,7 +296,7 @@ class CheckIfDead {
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
-				$errors[$curlInfo['rawurl']][] = "RESPONSE CODE: $httpCode";
+				$this->errors[$curlInfo['rawurl']][] = "RESPONSE CODE: $httpCode";
 				return true;
 			} else {
 				// Some servers don't support NOBODY requests, so if an HTTP error code
