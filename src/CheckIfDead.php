@@ -47,7 +47,8 @@ class CheckIfDead {
 	];
 
 	/**
-	 * A collection of errors encountered that resulted in the URL coming back dead.
+	 * Collection of errors encountered that resulted in the URL coming back 
+	 * dead, indexed by URL
 	 */
 	protected $errors = [];
 
@@ -296,7 +297,7 @@ class CheckIfDead {
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
-				$this->errors[$curlInfo['rawurl']][] = "RESPONSE CODE: $httpCode";
+				$this->errors[$curlInfo['rawurl']] = "RESPONSE CODE: $httpCode";
 				return true;
 			} else {
 				// Some servers don't support NOBODY requests, so if an HTTP error code
@@ -318,7 +319,7 @@ class CheckIfDead {
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
-					$this->errors[$curlInfo['rawurl']][] = "REDIRECT TO ROOT";
+					$this->errors[$curlInfo['rawurl']] = "REDIRECT TO ROOT";
 					return true;
 				}
 			}
