@@ -47,7 +47,7 @@ class CheckIfDead {
 	];
 
 	/**
-	 * Collection of errors encountered that resulted in the URL coming back 
+	 * Collection of errors encountered that resulted in the URL coming back
 	 * dead, indexed by URL
 	 */
 	protected $errors = [];
