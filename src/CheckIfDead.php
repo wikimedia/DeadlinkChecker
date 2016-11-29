@@ -7,7 +7,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.1' );
+define( 'CHECKIFDEADVERSION', '1.1.2' );
 
 class CheckIfDead {
 
@@ -332,7 +332,7 @@ class CheckIfDead {
 			return true;
 		}
 		if ( $httpCode === 0 ) {
-			$this->errors[$curlInfo['rawurl']] = "CONNECTION CLOSED UNEXPECTEDLY";
+			$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
