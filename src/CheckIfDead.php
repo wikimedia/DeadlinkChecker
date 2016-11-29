@@ -331,13 +331,17 @@ class CheckIfDead {
 				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
 			return true;
 		}
+		if ( $httpCode === 0 ) {
+			$this->errors[$curlInfo['rawurl']] = "CONNECTION CLOSED UNEXPECTEDLY";
+			return true;
+		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
-			$this->errors[$curlInfo['rawurl']] = "HTTP CODE: $httpCode";
+			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
 			return true;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
-			$this->errors[$curlInfo['rawurl']] = "FTP CODE: $httpCode";
+			$this->errors[$curlInfo['rawurl']] = "FTP RESPONSE CODE: $httpCode";
 			return true;
 		}
 
