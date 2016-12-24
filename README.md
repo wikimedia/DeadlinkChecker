@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/wikimedia/DeadlinkChecker.svg?branch=master)](https://travis-ci.org/wikimedia/DeadlinkChecker)
 ### Installation
 Using composer:
 Add the following to the composer.json file for your project:
