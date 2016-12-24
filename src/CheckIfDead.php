@@ -7,7 +7,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.2' );
+define( 'CHECKIFDEADVERSION', '1.1.3' );
 
 class CheckIfDead {
 
@@ -446,7 +446,9 @@ class CheckIfDead {
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
 											array_map( "urlencode",
-												explode( '=', $parts['query'][$index], 2 )
+												array_map( "urldecode",
+														   explode( '=', $parts['query'][$index], 2 )
+												)
 											)
 				);
 			}
