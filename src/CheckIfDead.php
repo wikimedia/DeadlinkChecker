@@ -7,7 +7,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.1' );
+define( 'CHECKIFDEADVERSION', '1.1.4' );
 
 class CheckIfDead {
 
@@ -47,7 +47,12 @@ class CheckIfDead {
 	];
 
 	/**
+<<<<<<< HEAD
 	 * A collection of errors encountered that resulted in the URL coming back dead.
+=======
+	 * Collection of errors encountered that resulted in the URL coming back
+	 * dead, indexed by URL
+>>>>>>> master
 	 */
 	protected $errors = [];
 
@@ -296,7 +301,11 @@ class CheckIfDead {
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
+<<<<<<< HEAD
 				$this->errors[$curlInfo['rawurl']][] = "RESPONSE CODE: $httpCode";
+=======
+				$this->errors[$curlInfo['rawurl']] = "RESPONSE CODE: $httpCode";
+>>>>>>> master
 				return true;
 			} else {
 				// Some servers don't support NOBODY requests, so if an HTTP error code
@@ -318,7 +327,11 @@ class CheckIfDead {
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
+<<<<<<< HEAD
 					$this->errors[$curlInfo['rawurl']][] = "REDIRECT TO ROOT";
+=======
+					$this->errors[$curlInfo['rawurl']] = "REDIRECT TO ROOT";
+>>>>>>> master
 					return true;
 				}
 			}
@@ -328,15 +341,30 @@ class CheckIfDead {
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] =
 				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
+<<<<<<< HEAD
+=======
+			return true;
+		}
+		if ( $httpCode === 0 ) {
+			$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
+>>>>>>> master
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
+<<<<<<< HEAD
 			$this->errors[$curlInfo['rawurl']] = "HTTP CODE: $httpCode";
 			return true;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "FTP CODE: $httpCode";
+=======
+			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
+			return true;
+			// Check for valid non-error codes for FTP
+		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
+			$this->errors[$curlInfo['rawurl']] = "FTP RESPONSE CODE: $httpCode";
+>>>>>>> master
 			return true;
 		}
 
@@ -441,7 +469,9 @@ class CheckIfDead {
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
 											array_map( "urlencode",
-												explode( '=', $parts['query'][$index], 2 )
+												array_map( "urldecode",
+														   explode( '=', $parts['query'][$index], 2 )
+												)
 											)
 				);
 			}
