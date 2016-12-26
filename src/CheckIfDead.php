@@ -428,13 +428,13 @@ class CheckIfDead {
 				// Remove port numbers if they are the default.
 				switch ( $parts['port'] ) {
 					case 80:
-						if ( !isset( $parts['scheme'] ) ||
+						if ( isset( $parts['scheme'] ) &&
 							strtolower( $parts['scheme'] ) == "http"
 						) {
 							break;
 						}
 					case 443:
-						if ( isset( $parts['scheme'] ) &&
+						if ( !isset( $parts['scheme'] ) ||
 							strtolower( $parts['scheme'] ) == "https"
 						) {
 							break;
