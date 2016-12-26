@@ -47,12 +47,8 @@ class CheckIfDead {
 	];
 
 	/**
-<<<<<<< HEAD
-	 * A collection of errors encountered that resulted in the URL coming back dead.
-=======
 	 * Collection of errors encountered that resulted in the URL coming back
 	 * dead, indexed by URL
->>>>>>> master
 	 */
 	protected $errors = [];
 
@@ -301,11 +297,7 @@ class CheckIfDead {
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
-<<<<<<< HEAD
-				$this->errors[$curlInfo['rawurl']][] = "RESPONSE CODE: $httpCode";
-=======
 				$this->errors[$curlInfo['rawurl']] = "RESPONSE CODE: $httpCode";
->>>>>>> master
 				return true;
 			} else {
 				// Some servers don't support NOBODY requests, so if an HTTP error code
@@ -315,8 +307,8 @@ class CheckIfDead {
 		}
 		// Check for error messages in redirected URL string
 		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
-			strpos( $effectiveUrlClean, '/404/' ) !== false ||
-			stripos( $effectiveUrlClean, 'notfound' ) !== false
+			 strpos( $effectiveUrlClean, '/404/' ) !== false ||
+			 stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			$this->errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
 			return true;
@@ -327,11 +319,7 @@ class CheckIfDead {
 			foreach ( $possibleRoots as $root ) {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
-<<<<<<< HEAD
-					$this->errors[$curlInfo['rawurl']][] = "REDIRECT TO ROOT";
-=======
 					$this->errors[$curlInfo['rawurl']] = "REDIRECT TO ROOT";
->>>>>>> master
 					return true;
 				}
 			}
@@ -341,30 +329,19 @@ class CheckIfDead {
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] =
 				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
-<<<<<<< HEAD
-=======
 			return true;
 		}
 		if ( $httpCode === 0 ) {
 			$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
->>>>>>> master
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
-<<<<<<< HEAD
-			$this->errors[$curlInfo['rawurl']] = "HTTP CODE: $httpCode";
-			return true;
-			// Check for valid non-error codes for FTP
-		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
-			$this->errors[$curlInfo['rawurl']] = "FTP CODE: $httpCode";
-=======
 			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
 			return true;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "FTP RESPONSE CODE: $httpCode";
->>>>>>> master
 			return true;
 		}
 
@@ -416,10 +393,11 @@ class CheckIfDead {
 		$parts = $this->parseURL( $url );
 
 		// In case the protocol is missing, assume it goes to HTTPS
+		// Schemes are case insensitive, might as well make them lowercase
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
 		} else {
-			$url = $parts['scheme'];
+			$url = strtolower( $parts['scheme'] );
 		}
 		// Move on to the domain
 		$url .= "://";
@@ -435,27 +413,48 @@ class CheckIfDead {
 		if ( isset( $parts['host'] ) ) {
 			// Properly encode the host.  It can't be UTF-8.
 			// See https://en.wikipedia.org/wiki/Internationalized_domain_name.
+			// Hosts are case insensitive, might as well make them lowercase too.
 			if ( function_exists( 'idn_to_ascii' ) ) {
-				$url .= idn_to_ascii( $parts['host'] );
+				$url .= strtolower( idn_to_ascii( $parts['host'] ) );
 			} else {
-				$url .= $parts['host'];
+				$url .= strtolower( $parts['host'] );
 			}
 			if ( isset( $parts['port'] ) ) {
-				$url .= ":" . $parts['port'];
+				// Ports are only needed if not using the defaults for the scheme.
+				// Remove port numbers if they are the default.
+				switch ( $parts['port'] ) {
+					case 80:
+						if( !isset( $parts['scheme'] ) ||
+							strtolower( $parts['scheme'] ) == "http" ) {
+							break;
+						}
+					case 443:
+						if( isset( $parts['scheme'] ) &&
+							strtolower( $parts['scheme'] ) == "https" ) {
+							break;
+						}
+					case 21:
+						if( isset( $parts['scheme'] ) &&
+							strtolower( $parts['scheme'] ) == "ftp" ) {
+							break;
+						}
+					default:
+						$url .= ":" . $parts['port'];
+				}
 			}
 		}
-		// Make sure path, query, and fragment are properly encoded, and not overencoded.
+		// Make sure path, query, and fragment are properly encoded, and not over-encoded.
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-						array_map( "rawurlencode",
-							explode( '/',
-								substr(
-									urldecode( $parts['path'] ), 1
-								)
-							)
-						)
+							 array_map( "rawurlencode",
+										explode( '/',
+												 substr(
+													 urldecode( $parts['path'] ), 1
+												 )
+										)
+							 )
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
@@ -468,11 +467,11 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-											array_map( "urlencode",
-												array_map( "urldecode",
-														   explode( '=', $parts['query'][$index], 2 )
-												)
-											)
+												   array_map( "urlencode",
+															  array_map( "urldecode",
+																		 explode( '=', $parts['query'][$index], 2 )
+															  )
+												   )
 				);
 			}
 			// Put the query string back together.
