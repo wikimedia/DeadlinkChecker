@@ -10,13 +10,11 @@ namespace Wikimedia\DeadlinkChecker;
 define( 'CHECKIFDEADVERSION', '1.1.4' );
 
 class CheckIfDead {
-
 	/**
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
-
 	// @codingStandardsIgnoreEnd
 	/**
 	 *  HTTP codes that do not indicate a dead link
@@ -26,7 +24,6 @@ class CheckIfDead {
 		200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
 		300, 301, 302, 303, 304, 305, 306, 307, 308,
 	];
-
 	/**
 	 * FTP codes that do not indicate a dead link
 	 */
@@ -36,7 +33,6 @@ class CheckIfDead {
 		226, 227, 228, 229, 230, 231, 232, 234, 250, 257,
 		300, 331, 332, 350, 600, 631, 633,
 	];
-
 	/**
 	 * Curl error codes that are problematic and the link should be considered
 	 * dead
@@ -45,13 +41,11 @@ class CheckIfDead {
 		3, 5, 6, 7, 8, 10, 11, 12, 13, 19, 28, 31, 47,
 		51, 52, 60, 61, 64, 68, 74, 83, 85, 86, 87,
 	];
-
 	/**
 	 * Collection of errors encountered that resulted in the URL coming back
 	 * dead, indexed by URL
 	 */
 	protected $errors = [];
-
 	/**
 	 * Check if a single URL is dead by performing a curl request
 	 *
@@ -62,10 +56,8 @@ class CheckIfDead {
 	public function isLinkDead( $url ) {
 		$deadVal = $this->areLinksDead( [ $url ] );
 		$deadVal = $deadVal[$url];
-
 		return $deadVal;
 	}
-
 	/**
 	 * Check an array of links
 	 *
@@ -89,7 +81,6 @@ class CheckIfDead {
 			if ( $curl_instances[$id] === false ) {
 				return null;
 			}
-
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
@@ -142,10 +133,8 @@ class CheckIfDead {
 			// Merge back results from full requests into our deadlinks array
 			$deadLinks = array_merge( $deadLinks, $results );
 		}
-
 		return $deadLinks;
 	}
-
 	/**
 	 * Perform a complete text request, not just for headers
 	 *
@@ -207,10 +196,8 @@ class CheckIfDead {
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
-
 		return $deadlinks;
 	}
-
 	/**
 	 * Get CURL options
 	 *
@@ -258,10 +245,8 @@ class CheckIfDead {
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
-
 		return $options;
 	}
-
 	/**
 	 * Get request type
 	 *
@@ -275,7 +260,6 @@ class CheckIfDead {
 			return "HTTP";
 		}
 	}
-
 	/**
 	 * Process the returned headers
 	 *
@@ -297,7 +281,6 @@ class CheckIfDead {
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
 				$this->errors[$curlInfo['rawurl']] = "RESPONSE CODE: $httpCode";
-
 				return true;
 			} else {
 				// Some servers don't support NOBODY requests, so if an HTTP error code
@@ -311,7 +294,6 @@ class CheckIfDead {
 			stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			$this->errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
-
 			return true;
 		}
 		// Check if there was a redirect by comparing final URL with original URL
@@ -321,7 +303,6 @@ class CheckIfDead {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
 					$this->errors[$curlInfo['rawurl']] = "REDIRECT TO ROOT";
-
 					return true;
 				}
 			}
@@ -331,30 +312,24 @@ class CheckIfDead {
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] =
 				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
-
 			return true;
 		}
 		if ( $httpCode === 0 ) {
 			$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
-
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
-
 			return true;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "FTP RESPONSE CODE: $httpCode";
-
 			return true;
 		}
-
 		// Yay, the checks passed, and the site is alive.
 		return false;
 	}
-
 	/**
 	 * Compile an array of "possible" root URLs. With subdomain, without subdomain etc.
 	 *
@@ -379,10 +354,8 @@ class CheckIfDead {
 			$roots[] = implode( '.', array_slice( $parts, -2 ) );
 			$roots[] = implode( '.', array_slice( $parts, -2 ) ) . '/';
 		}
-
 		return $roots;
 	}
-
 	/**
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
