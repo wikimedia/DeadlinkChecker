@@ -7,7 +7,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.3' );
+define( 'CHECKIFDEADVERSION', '1.1.4' );
 
 class CheckIfDead {
 
