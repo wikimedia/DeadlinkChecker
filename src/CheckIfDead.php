@@ -7,7 +7,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.3' );
+define( 'CHECKIFDEADVERSION', '1.1.4' );
 
 class CheckIfDead {
 
@@ -396,7 +396,7 @@ class CheckIfDead {
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
 		} else {
-			$url = $parts['scheme'];
+			$url = strtolower( $parts['scheme'] );
 		}
 		// Move on to the domain
 		$url .= "://";
@@ -413,26 +413,49 @@ class CheckIfDead {
 			// Properly encode the host.  It can't be UTF-8.
 			// See https://en.wikipedia.org/wiki/Internationalized_domain_name.
 			if ( function_exists( 'idn_to_ascii' ) ) {
-				$url .= idn_to_ascii( $parts['host'] );
+				$url .= strtolower( idn_to_ascii( $parts['host'] ) );
 			} else {
-				$url .= $parts['host'];
+				$url .= strtolower( $parts['host'] );
 			}
 			if ( isset( $parts['port'] ) ) {
-				$url .= ":" . $parts['port'];
+				// Ports are only needed if not using the defaults for the scheme.
+				// Remove port numbers if they are the default.
+				switch ( $parts['port'] ) {
+					case 80:
+						if ( isset( $parts['scheme'] ) &&
+						     strtolower( $parts['scheme'] ) == "http"
+						) {
+							break;
+						}
+					case 443:
+						if ( !isset( $parts['scheme'] ) ||
+						     strtolower( $parts['scheme'] ) == "https"
+						) {
+							break;
+						}
+					case 21:
+						if ( isset( $parts['scheme'] ) &&
+						     strtolower( $parts['scheme'] ) == "ftp"
+						) {
+							break;
+						}
+					default:
+						$url .= ":" . $parts['port'];
+				}
 			}
 		}
-		// Make sure path, query, and fragment are properly encoded, and not overencoded.
+		// Make sure path, query, and fragment are properly encoded, and not over-encoded.
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
 			$url .= implode( '/',
-						array_map( "rawurlencode",
-							explode( '/',
-								substr(
-									urldecode( $parts['path'] ), 1
-								)
-							)
+				array_map( "rawurlencode",
+					explode( '/',
+						substr(
+							urldecode( $parts['path'] ), 1
 						)
+					)
+				)
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
@@ -445,11 +468,11 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-											array_map( "urlencode",
-												array_map( "urldecode",
-														   explode( '=', $parts['query'][$index], 2 )
-												)
-											)
+					array_map( "urlencode",
+						array_map( "urldecode",
+							explode( '=', $parts['query'][$index], 2 )
+						)
+					)
 				);
 			}
 			// Put the query string back together.
