@@ -495,6 +495,9 @@ class CheckIfDead {
 	 *     array( 'scheme' => 'https', 'host' => 'hello.com', 'path' => '/en/' ) )
 	 */
 	public function parseURL( $url ) {
+		if( !preg_match( '/(?:[a-z0-9\+\-\.]*:)?\/\//i', $url ) ) {
+			$url = "http://".$url;
+		}
 		$encodedUrl = preg_replace_callback(
 			'%[^:/@?&=#]+%usD',
 			function ( $matches ) {
