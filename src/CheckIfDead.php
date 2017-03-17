@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Copyright (c) 2016, Niharika Kohli
  *
@@ -16,8 +15,8 @@ class CheckIfDead {
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
-	// @codingStandardsIgnoreEnd
 
+	// @codingStandardsIgnoreEnd
 	/**
 	 *  HTTP codes that do not indicate a dead link
 	 */
@@ -89,7 +88,6 @@ class CheckIfDead {
 			if ( $curl_instances[$id] === false ) {
 				return null;
 			}
-
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
@@ -241,7 +239,6 @@ class CheckIfDead {
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
-
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
@@ -298,6 +295,7 @@ class CheckIfDead {
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
 				$this->errors[$curlInfo['rawurl']] = "RESPONSE CODE: $httpCode";
+
 				return true;
 			} else {
 				// Some servers don't support NOBODY requests, so if an HTTP error code
@@ -311,6 +309,7 @@ class CheckIfDead {
 			stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
 			$this->errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
+
 			return true;
 		}
 		// Check if there was a redirect by comparing final URL with original URL
@@ -320,6 +319,7 @@ class CheckIfDead {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
 					$this->errors[$curlInfo['rawurl']] = "REDIRECT TO ROOT";
+
 					return true;
 				}
 			}
@@ -329,19 +329,23 @@ class CheckIfDead {
 		if ( in_array( $curlInfo['curl_error'], $this->curlErrorCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] =
 				"Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
+
 			return true;
 		}
 		if ( $httpCode === 0 ) {
 			$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
+
 			return true;
 		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
+
 			return true;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "FTP RESPONSE CODE: $httpCode";
+
 			return true;
 		}
 
@@ -388,10 +392,8 @@ class CheckIfDead {
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
 		// can't handle decoded characters.
-
 		// Break up the URL first
 		$parts = $this->parseURL( $url );
-
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -423,19 +425,19 @@ class CheckIfDead {
 				switch ( $parts['port'] ) {
 					case 80:
 						if ( isset( $parts['scheme'] ) &&
-						     strtolower( $parts['scheme'] ) == "http"
+							strtolower( $parts['scheme'] ) == "http"
 						) {
 							break;
 						}
 					case 443:
 						if ( !isset( $parts['scheme'] ) ||
-						     strtolower( $parts['scheme'] ) == "https"
+							strtolower( $parts['scheme'] ) == "https"
 						) {
 							break;
 						}
 					case 21:
 						if ( isset( $parts['scheme'] ) &&
-						     strtolower( $parts['scheme'] ) == "ftp"
+							strtolower( $parts['scheme'] ) == "ftp"
 						) {
 							break;
 						}
@@ -495,6 +497,9 @@ class CheckIfDead {
 	 *     array( 'scheme' => 'https', 'host' => 'hello.com', 'path' => '/en/' ) )
 	 */
 	public function parseURL( $url ) {
+		if ( !preg_match( '/(?:[a-z0-9\+\-\.]*:)?\/\//i', $url ) ) {
+			$url = "http://" . $url;
+		}
 		$encodedUrl = preg_replace_callback(
 			'%[^:/@?&=#]+%usD',
 			function ( $matches ) {
@@ -502,7 +507,6 @@ class CheckIfDead {
 			},
 			$url
 		);
-
 		$parts = parse_url( $encodedUrl );
 		foreach ( $parts as $name => $value ) {
 			$parts[$name] = urldecode( $value );
