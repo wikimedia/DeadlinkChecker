@@ -118,6 +118,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2',
 				'http://www.discogs.com/Various-Kad-Jeknu-Draga%C4%8Devske-Trube-2'
 			],
+			[ 'https:/zh.wikipedia.org/wiki/猫', 'https://zh.wikipedia.org/wiki/%E7%8C%AB' ],
+			[ 'zh.wikipedia.org/wiki/猫', 'http://zh.wikipedia.org/wiki/%E7%8C%AB' ],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
