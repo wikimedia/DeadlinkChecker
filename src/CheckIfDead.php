@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.4' );
+define( 'CHECKIFDEADVERSION', '1.1.5' );
 
 class CheckIfDead {
 
@@ -497,6 +497,13 @@ class CheckIfDead {
 	 *     array( 'scheme' => 'https', 'host' => 'hello.com', 'path' => '/en/' ) )
 	 */
 	public function parseURL( $url ) {
+		// Sometimes the scheme is followed by a single slash instead of a double.
+		// Web browsers and archives support this, so we should too.
+		if ( preg_match( '/^([a-z0-9\+\-\.]*:)?\/([^\/].+)/i', $url, $match ) ) {
+			$url = $match[1] . "//" . $match[2];
+		}
+		// If we're missing the scheme and double slashes entirely, assume http.
+		// The parse_url function fails without this
 		if ( !preg_match( '/(?:[a-z0-9\+\-\.]*:)?\/\//i', $url ) ) {
 			$url = "http://" . $url;
 		}
