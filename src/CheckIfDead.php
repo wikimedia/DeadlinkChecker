@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.5' );
+define( 'CHECKIFDEADVERSION', '1.1.5.1' );
 
 class CheckIfDead {
 
@@ -454,7 +454,7 @@ class CheckIfDead {
 				array_map( "rawurlencode",
 					explode( '/',
 						substr(
-							urldecode( $parts['path'] ), 1
+							rawurldecode( $parts['path'] ), 1
 						)
 					)
 				)

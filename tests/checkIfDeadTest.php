@@ -120,6 +120,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			],
 			[ 'https:/zh.wikipedia.org/wiki/猫', 'https://zh.wikipedia.org/wiki/%E7%8C%AB' ],
 			[ 'zh.wikipedia.org/wiki/猫', 'http://zh.wikipedia.org/wiki/%E7%8C%AB' ],
+			[ 'http://www.cabelas.com/story-123/boddington_short_mag/10201/The+Short+Mag+Revolution.shtml',
+				'http://www.cabelas.com/story-123/boddington_short_mag/10201/The%2BShort%2BMag%2BRevolution.shtml'
+			],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
