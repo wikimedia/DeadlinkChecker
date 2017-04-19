@@ -499,9 +499,7 @@ class CheckIfDead {
 	public function parseURL( $url ) {
 		// Feeding fully encoded URLs will not work.  So let's detect and decode if needed first.
 		// This is just idiot proofing.
-		if ( preg_match( '/^([a-z0-9\+\-\.]*\%3a)?(?:\%2f|\/)/i', $url ) ) {
-			$url = urldecode( $url );
-		}
+		$url = rawurldecode( $url );
 		// Sometimes the scheme is followed by a single slash instead of a double.
 		// Web browsers and archives support this, so we should too.
 		if ( preg_match( '/^([a-z0-9\+\-\.]*:)?\/([^\/].+)/i', $url, $match ) ) {
