@@ -30,7 +30,6 @@
   },
   "require": {
     "ext-curl": "*",
-    "lib-curl": ">=7.15.1",
     "php": ">=5.5.9"
   },
   "require-dev": {
