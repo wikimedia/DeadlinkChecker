@@ -127,6 +127,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.sports-reference.com/olympics/winter/1994/NCO/mens-team.html' ],
 			[ 'http%3A//www%2Eatimes%2Ecom/atimes/Middle_East/FH13Ak05%2Ehtml',
 				'http://www.atimes.com/atimes/Middle_East/FH13Ak05.html' ],
+			[ 'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping',
+				'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping']
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {

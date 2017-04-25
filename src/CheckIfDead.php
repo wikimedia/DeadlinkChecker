@@ -511,7 +511,7 @@ class CheckIfDead {
 			$url = "http://" . $url;
 		}
 		$encodedUrl = preg_replace_callback(
-			'%[^:/@?&=#]+%usD',
+			'%[^:/@?&=#]+%sD',
 			function ( $matches ) {
 				return urlencode( $matches[0] );
 			},
