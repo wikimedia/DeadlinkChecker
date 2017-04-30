@@ -100,7 +100,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 */
 	public function testSanitizeURL( $url, $expect ) {
 		$obj = new CheckIfDead();
-		$this->assertEquals( $expect, $obj->sanitizeURL( $url ) );
+		$this->assertEquals( $expect, $obj->sanitizeURL( $url, true ) );
 	}
 
 	public function provideSanitizeURL() {
@@ -112,7 +112,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit',
 				'https://en.wikipedia.org/w/index.php?title=Bill_Gates&action=edit'
 			],
-			[ 'ftp://google.com/#param=1', 'ftp://google.com/#param=1' ],
+			[ 'ftp://google.com/#param=1', 'ftp://google.com/' ],
 			[ 'https://zh.wikipedia.org/wiki/猫', 'https://zh.wikipedia.org/wiki/%E7%8C%AB' ],
 			[
 				'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2',
@@ -129,6 +129,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.atimes.com/atimes/Middle_East/FH13Ak05.html' ],
 			[ 'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping',
 				'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping'],
+			[ 'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907#YqFdqg6Pj8MAAAFCbEWeJA/67',
+				'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907' ],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {

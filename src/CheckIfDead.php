@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.6' );
+define( 'CHECKIFDEADVERSION', '1.2' );
 
 class CheckIfDead {
 
@@ -384,10 +384,11 @@ class CheckIfDead {
 	/**
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
-	 * @param $url URL to sanitize
+	 * @param string $url URL to sanitize
+	 * @param bool $stripFragment Remove the fragment from the URL.
 	 * @return string sanitized URL
 	 */
-	public function sanitizeURL( $url ) {
+	public function sanitizeURL( $url, $stripFragment = false ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
@@ -481,7 +482,7 @@ class CheckIfDead {
 			$parts['query'] = implode( '&', $parts['query'] );
 			$url .= $parts['query'];
 		}
-		if ( isset( $parts['fragment'] ) ) {
+		if ( $stripFragment === false && isset( $parts['fragment'] ) ) {
 			// We don't need to encode the fragment, that's handled client side anyways.
 			$url .= "#" . $parts['fragment'];
 		}
