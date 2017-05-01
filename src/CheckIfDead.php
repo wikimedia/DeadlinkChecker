@@ -500,7 +500,19 @@ class CheckIfDead {
 	public function parseURL( $url ) {
 		// Feeding fully encoded URLs will not work.  So let's detect and decode if needed first.
 		// This is just idiot proofing.
+		// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
+		$fragment = parse_url( $url, PHP_URL_FRAGMENT );
+		if( !is_null( $fragment ) ) {
+			$url = strstr( $url, "#", true );
+		}
+		// Decode URL
 		$url = rawurldecode( $url );
+		// Re-encode the remaining #'s
+		$url = str_replace( "#", "%23", $url );
+		// Reattach the fragment
+		if( !is_null( $fragment ) ) {
+			$url .= "#$fragment";
+		}
 		// Sometimes the scheme is followed by a single slash instead of a double.
 		// Web browsers and archives support this, so we should too.
 		if ( preg_match( '/^([a-z0-9\+\-\.]*:)?\/([^\/].+)/i', $url, $match ) ) {

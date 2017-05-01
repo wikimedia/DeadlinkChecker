@@ -135,6 +135,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.gcis.gov.za/gcis/gcis_list.jsp?id=14&heading=Executive%20Mayors' ],
 			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue',
 				'http://example.com/blue%2Blight%20blue?blue%20light%20blue' ],
+			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar#foobar',
+				'http://example.com/blue%2Blight%20blue?blue%20light%20blue%23foobar' ],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
