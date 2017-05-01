@@ -502,7 +502,7 @@ class CheckIfDead {
 		// This is just idiot proofing.
 		// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
 		$fragment = parse_url( $url, PHP_URL_FRAGMENT );
-		if( !is_null( $fragment ) ) {
+		if ( !is_null( $fragment ) ) {
 			$url = strstr( $url, "#", true );
 		}
 		// Decode URL
@@ -510,7 +510,7 @@ class CheckIfDead {
 		// Re-encode the remaining #'s
 		$url = str_replace( "#", "%23", $url );
 		// Reattach the fragment
-		if( !is_null( $fragment ) ) {
+		if ( !is_null( $fragment ) ) {
 			$url .= "#$fragment";
 		}
 		// Sometimes the scheme is followed by a single slash instead of a double.
