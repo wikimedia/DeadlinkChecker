@@ -131,6 +131,10 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping'],
 			[ 'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907#YqFdqg6Pj8MAAAFCbEWeJA/67',
 				'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907' ],
+			[ 'http://www.gcis.gov.za/gcis/gcis_list.jsp?id=14&heading=Executive+Mayors',
+				'http://www.gcis.gov.za/gcis/gcis_list.jsp?id=14&heading=Executive%20Mayors' ],
+			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue',
+				'http://example.com/blue%2Blight%20blue?blue%20light%20blue' ],
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {

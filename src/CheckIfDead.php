@@ -471,7 +471,7 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-					array_map( "urlencode",
+					array_map( "rawurlencode",
 						array_map( "urldecode",
 							explode( '=', $parts['query'][$index], 2 )
 						)
