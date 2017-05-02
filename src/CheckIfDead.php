@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.1.6' );
+define( 'CHECKIFDEADVERSION', '1.2' );
 
 class CheckIfDead {
 
@@ -384,10 +384,11 @@ class CheckIfDead {
 	/**
 	 * Properly encode the URL to ensure the receiving webservice understands the request.
 	 *
-	 * @param $url URL to sanitize
+	 * @param string $url URL to sanitize
+	 * @param bool $stripFragment Remove the fragment from the URL.
 	 * @return string sanitized URL
 	 */
-	public function sanitizeURL( $url ) {
+	public function sanitizeURL( $url, $stripFragment = false ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
@@ -470,7 +471,7 @@ class CheckIfDead {
 				// Make sure we don't inadvertently encode the first instance of "="
 				// Otherwise we break the query.
 				$parts['query'][$index] = implode( '=',
-					array_map( "urlencode",
+					array_map( "rawurlencode",
 						array_map( "urldecode",
 							explode( '=', $parts['query'][$index], 2 )
 						)
@@ -481,7 +482,7 @@ class CheckIfDead {
 			$parts['query'] = implode( '&', $parts['query'] );
 			$url .= $parts['query'];
 		}
-		if ( isset( $parts['fragment'] ) ) {
+		if ( $stripFragment === false && isset( $parts['fragment'] ) ) {
 			// We don't need to encode the fragment, that's handled client side anyways.
 			$url .= "#" . $parts['fragment'];
 		}
@@ -499,7 +500,19 @@ class CheckIfDead {
 	public function parseURL( $url ) {
 		// Feeding fully encoded URLs will not work.  So let's detect and decode if needed first.
 		// This is just idiot proofing.
+		// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
+		$fragment = parse_url( $url, PHP_URL_FRAGMENT );
+		if ( !is_null( $fragment ) ) {
+			$url = strstr( $url, "#", true );
+		}
+		// Decode URL
 		$url = rawurldecode( $url );
+		// Re-encode the remaining #'s
+		$url = str_replace( "#", "%23", $url );
+		// Reattach the fragment
+		if ( !is_null( $fragment ) ) {
+			$url .= "#$fragment";
+		}
 		// Sometimes the scheme is followed by a single slash instead of a double.
 		// Web browsers and archives support this, so we should too.
 		if ( preg_match( '/^([a-z0-9\+\-\.]*:)?\/([^\/].+)/i', $url, $match ) ) {
