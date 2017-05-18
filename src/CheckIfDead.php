@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.2' );
+define( 'CHECKIFDEADVERSION', '1.2.1' );
 
 class CheckIfDead {
 
@@ -308,9 +308,15 @@ class CheckIfDead {
 			strpos( $effectiveUrlClean, '/404/' ) !== false ||
 			stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
-			$this->errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
+			if ( $full ) {
+				$this->errors[$curlInfo['rawurl']] = "REDIRECT TO 404";
 
-			return true;
+				return true;
+			} else {
+				// Some servers don't support NOBODY requests, so if redirect to a 404 page
+				// is returned, we'll check the URL again with a full page request.
+				return null;
+			}
 		}
 		// Check if there was a redirect by comparing final URL with original URL
 		if ( $effectiveUrlClean != $this->cleanURL( $curlInfo['url'] ) ) {
