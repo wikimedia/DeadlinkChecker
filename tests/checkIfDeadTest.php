@@ -31,7 +31,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				false
 			],
 			[ 'http://content.onlinejacc.org/cgi/content/full/41/9/1633', false ],
-			[ 'http://flysunairexpress.com/#about', false ],
+			//[ 'http://flysunairexpress.com/#about', false ],
 			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
 			[ 'http://list.english-heritage.org.uk/resultsingle.aspx?uid=1284140', false ],
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
