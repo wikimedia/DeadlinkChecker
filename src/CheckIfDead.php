@@ -407,7 +407,7 @@ class CheckIfDead {
 		// Some rare URLs don't like it when %20 is passed in the query and require the +.
 		// %20 is the most common usage to represent a whitespace in the query.
 		// So convert them to unique values that will survive the encoding/decoding process.
-		if( $preserveQueryEncoding === true ) {
+		if( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
 			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
 			$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
 		}
