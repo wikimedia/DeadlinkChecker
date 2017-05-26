@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.2.1' );
+define( 'CHECKIFDEADVERSION', '1.3' );
 
 class CheckIfDead {
 
@@ -14,7 +14,7 @@ class CheckIfDead {
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
-	protected $userAgent = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36";
+	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
 
 	// @codingStandardsIgnoreEnd
 	/**
@@ -167,7 +167,7 @@ class CheckIfDead {
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
-				$this->getCurlOptions( $this->sanitizeURL( $url ), true )
+				$this->getCurlOptions( $this->sanitizeURL( $url, false, true ), true )
 			);
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
@@ -196,7 +196,7 @@ class CheckIfDead {
 				'effective_url' => $headers['url'],
 				'curl_error' => $error,
 				'curl_error_msg' => $errormsg,
-				'url' => $this->sanitizeURL( $url ),
+				'url' => $this->sanitizeURL( $url, false, true ),
 				'rawurl' => $url
 			];
 			// Remove each of the individual handles
@@ -226,6 +226,7 @@ class CheckIfDead {
 			'Keep-Alive: 300',
 			'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
 			'Accept-Language: en-us,en;q=0.5',
+			'Accept-Encoding: gzip,deflate',
 			'Pragma: '
 		];
 		$options = [
@@ -252,7 +253,7 @@ class CheckIfDead {
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
 			$options[CURLOPT_HTTPHEADER] = $header;
-			$options[CURLOPT_ENCODING] = '';
+			$options[CURLOPT_ENCODING] = 'gzip,deflate';
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
@@ -392,15 +393,24 @@ class CheckIfDead {
 	 *
 	 * @param string $url URL to sanitize
 	 * @param bool $stripFragment Remove the fragment from the URL.
+	 * @param bool $preserveQueryEncoding Preserve the whitespace encoding of query strings.  Otherwise convert to %20.
 	 * @return string sanitized URL
 	 */
-	public function sanitizeURL( $url, $stripFragment = false ) {
+	public function sanitizeURL( $url, $stripFragment = false, $preserveQueryEncoding = false ) {
 		// The domain is easily decoded by the DNS handler,
 		// but the path is what's seen by the respective webservice.
 		// We need to encode it as some
 		// can't handle decoded characters.
 		// Break up the URL first
 		$parts = $this->parseURL( $url );
+
+		// Some rare URLs don't like it when %20 is passed in the query and require the +.
+		// %20 is the most common usage to represent a whitespace in the query.
+		// So convert them to unique values that will survive the encoding/decoding process.
+		if( $preserveQueryEncoding === true ) {
+			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
+			$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
+		}
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -491,6 +501,12 @@ class CheckIfDead {
 		if ( $stripFragment === false && isset( $parts['fragment'] ) ) {
 			// We don't need to encode the fragment, that's handled client side anyways.
 			$url .= "#" . $parts['fragment'];
+		}
+
+		// Convert our identifiers back into URL elements.
+		if( $preserveQueryEncoding === true ) {
+			$url = str_replace( "CHECKIFDEADHEXSPACE", "%20", $url );
+			$url = str_replace( "CHECKIFDEADPLUSSPACE", "+", $url );
 		}
 
 		return $url;

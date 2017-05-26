@@ -37,6 +37,10 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
 			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
 			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
+			[
+				'http://www.usnews.com/news/blogs/god-and-country/2009/06/30/time-report-white-house-reaction-raise-more-questions-about-obamas-church-hunt',
+				false
+			],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
