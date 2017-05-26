@@ -393,7 +393,7 @@ class CheckIfDead {
 	 *
 	 * @param string $url URL to sanitize
 	 * @param bool $stripFragment Remove the fragment from the URL.
-	 * @param bool $preserveQueryEncoding Preserve the whitespace encoding of query strings.  Otherwise convert to %20.
+	 * @param bool $preserveQueryEncoding Preserve the whitespace encoding of query strings.
 	 * @return string sanitized URL
 	 */
 	public function sanitizeURL( $url, $stripFragment = false, $preserveQueryEncoding = false ) {
@@ -407,7 +407,7 @@ class CheckIfDead {
 		// Some rare URLs don't like it when %20 is passed in the query and require the +.
 		// %20 is the most common usage to represent a whitespace in the query.
 		// So convert them to unique values that will survive the encoding/decoding process.
-		if( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
+		if ( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
 			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
 			$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
 		}
@@ -504,7 +504,7 @@ class CheckIfDead {
 		}
 
 		// Convert our identifiers back into URL elements.
-		if( $preserveQueryEncoding === true ) {
+		if ( $preserveQueryEncoding === true ) {
 			$url = str_replace( "CHECKIFDEADHEXSPACE", "%20", $url );
 			$url = str_replace( "CHECKIFDEADPLUSSPACE", "+", $url );
 		}
