@@ -37,6 +37,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
 			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
 			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
+			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art', false ],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
@@ -122,7 +123,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https:/zh.wikipedia.org/wiki/猫', 'https://zh.wikipedia.org/wiki/%E7%8C%AB' ],
 			[ 'zh.wikipedia.org/wiki/猫', 'http://zh.wikipedia.org/wiki/%E7%8C%AB' ],
 			[ 'http://www.cabelas.com/story-123/boddington_short_mag/10201/The+Short+Mag+Revolution.shtml',
-				'http://www.cabelas.com/story-123/boddington_short_mag/10201/The%2BShort%2BMag%2BRevolution.shtml'
+				'http://www.cabelas.com/story-123/boddington_short_mag/10201/The+Short+Mag+Revolution.shtml'
 			],
 			[ 'http%3A%2F%2Fwww.sports-reference.com%2Folympics%2Fwinter%2F1994%2FNCO%2Fmens-team.html',
 				'http://www.sports-reference.com/olympics/winter/1994/NCO/mens-team.html' ],
@@ -132,12 +133,10 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping'],
 			[ 'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907#YqFdqg6Pj8MAAAFCbEWeJA/67',
 				'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907' ],
-			[ 'http://www.gcis.gov.za/gcis/gcis_list.jsp?id=14&heading=Executive+Mayors',
-				'http://www.gcis.gov.za/gcis/gcis_list.jsp?id=14&heading=Executive%20Mayors' ],
-			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue',
-				'http://example.com/blue%2Blight%20blue?blue%20light%20blue' ],
 			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar#foobar',
-				'http://example.com/blue%2Blight%20blue?blue%20light%20blue%23foobar' ],
+				'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar' ],
+			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art',
+				'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art' ]
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {

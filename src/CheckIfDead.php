@@ -6,7 +6,7 @@
  */
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.3' );
+define( 'CHECKIFDEADVERSION', '1.3.1' );
 
 class CheckIfDead {
 
@@ -409,8 +409,8 @@ class CheckIfDead {
 		// So convert them to unique values that will survive the encoding/decoding process.
 		if ( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
 			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
-			$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
 		}
+
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -467,6 +467,7 @@ class CheckIfDead {
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
+			$parts['path'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['path'] );
 			$url .= implode( '/',
 				array_map( "rawurlencode",
 					explode( '/',
@@ -478,6 +479,9 @@ class CheckIfDead {
 			);
 		}
 		if ( isset( $parts['query'] ) ) {
+			// Encoding the + means a literal plus in the query.
+			// A plus means a space otherwise.
+			$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
 			// We have a query string, all queries start with a ?
 			$url .= "?";
 			// Break apart the query string.  Separate them into all of the arguments passed.
@@ -503,10 +507,11 @@ class CheckIfDead {
 			$url .= "#" . $parts['fragment'];
 		}
 
+		$url = str_replace( "CHECKIFDEADPLUSSPACE", "+", $url );
+
 		// Convert our identifiers back into URL elements.
 		if ( $preserveQueryEncoding === true ) {
 			$url = str_replace( "CHECKIFDEADHEXSPACE", "%20", $url );
-			$url = str_replace( "CHECKIFDEADPLUSSPACE", "+", $url );
 		}
 
 		return $url;
@@ -522,18 +527,22 @@ class CheckIfDead {
 	public function parseURL( $url ) {
 		// Feeding fully encoded URLs will not work.  So let's detect and decode if needed first.
 		// This is just idiot proofing.
-		// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
-		$fragment = parse_url( $url, PHP_URL_FRAGMENT );
-		if ( !is_null( $fragment ) ) {
-			$url = strstr( $url, "#", true );
-		}
-		// Decode URL
-		$url = rawurldecode( $url );
-		// Re-encode the remaining #'s
-		$url = str_replace( "#", "%23", $url );
-		// Reattach the fragment
-		if ( !is_null( $fragment ) ) {
-			$url .= "#$fragment";
+		// Make sure URL is fully encoded by checking if the :// is encoded.
+		// This prevents URLs where double encoded values aren't mistakenly decoded breaking the URL.
+		if( preg_match( '/^([a-z0-9\+\-\.]*)(?:%3A%2F%2F|%3A\/\/|:%2F%2F)/i', $url ) ) {
+			// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
+			$fragment = parse_url( $url, PHP_URL_FRAGMENT );
+			if ( !is_null( $fragment ) ) {
+				$url = strstr( $url, "#", true );
+			}
+			// Decode URL
+			$url = rawurldecode( $url );
+			// Re-encode the remaining #'s
+			$url = str_replace( "#", "%23", $url );
+			// Reattach the fragment
+			if ( !is_null( $fragment ) ) {
+				$url .= "#$fragment";
+			}
 		}
 		// Sometimes the scheme is followed by a single slash instead of a double.
 		// Web browsers and archives support this, so we should too.
