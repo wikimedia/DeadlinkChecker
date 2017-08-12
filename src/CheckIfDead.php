@@ -4,6 +4,7 @@
  *
  * @license https://www.gnu.org/licenses/gpl.txt
  */
+
 namespace Wikimedia\DeadlinkChecker;
 
 define( 'CHECKIFDEADVERSION', '1.3.1' );
@@ -17,6 +18,7 @@ class CheckIfDead {
 	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
 
 	// @codingStandardsIgnoreEnd
+
 	/**
 	 *  HTTP codes that do not indicate a dead link
 	 */
@@ -403,14 +405,12 @@ class CheckIfDead {
 		// can't handle decoded characters.
 		// Break up the URL first
 		$parts = $this->parseURL( $url );
-
 		// Some rare URLs don't like it when %20 is passed in the query and require the +.
 		// %20 is the most common usage to represent a whitespace in the query.
 		// So convert them to unique values that will survive the encoding/decoding process.
 		if ( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
 			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
 		}
-
 		// In case the protocol is missing, assume it goes to HTTPS
 		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
@@ -506,9 +506,7 @@ class CheckIfDead {
 			// We don't need to encode the fragment, that's handled client side anyways.
 			$url .= "#" . $parts['fragment'];
 		}
-
 		$url = str_replace( "CHECKIFDEADPLUSSPACE", "+", $url );
-
 		// Convert our identifiers back into URL elements.
 		if ( $preserveQueryEncoding === true ) {
 			$url = str_replace( "CHECKIFDEADHEXSPACE", "%20", $url );
@@ -529,7 +527,7 @@ class CheckIfDead {
 		// This is just idiot proofing.
 		// Make sure URL is fully encoded by checking if the :// is encoded.
 		// This prevents URLs where double encoded values aren't mistakenly decoded breaking the URL.
-		if( preg_match( '/^([a-z0-9\+\-\.]*)(?:%3A%2F%2F|%3A\/\/|:%2F%2F)/i', $url ) ) {
+		if ( preg_match( '/^([a-z0-9\+\-\.]*)(?:%3A%2F%2F|%3A\/\/|:%2F%2F)/i', $url ) ) {
 			// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
 			$fragment = parse_url( $url, PHP_URL_FRAGMENT );
 			if ( !is_null( $fragment ) ) {
