@@ -467,6 +467,8 @@ class CheckIfDead {
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
+			// Pluses in the path are legal characters that do not need to be encoded.
+			// Some URLs don't like the plus encoded.
 			$parts['path'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['path'] );
 			$url .= implode( '/',
 				array_map( "rawurlencode",
@@ -525,7 +527,7 @@ class CheckIfDead {
 	public function parseURL( $url ) {
 		// Feeding fully encoded URLs will not work.  So let's detect and decode if needed first.
 		// This is just idiot proofing.
-		// Make sure URL is fully encoded by checking if the :// is encoded.
+		// See if the URL is fully encoded by checking if the :// is encoded.
 		// This prevents URLs where double encoded values aren't mistakenly decoded breaking the URL.
 		if ( preg_match( '/^([a-z0-9\+\-\.]*)(?:%3A%2F%2F|%3A\/\/|:%2F%2F)/i', $url ) ) {
 			// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
