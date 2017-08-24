@@ -134,8 +134,10 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907' ],
 			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar#foobar',
 				'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar' ],
-			[ '://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art',
-				'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art' ]
+			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art',
+				'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art' ],
+			[ '://www.musicvf.com/',
+				'http://www.musicvf.com/' ]
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
