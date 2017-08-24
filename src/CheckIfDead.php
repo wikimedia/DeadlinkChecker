@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.3.1' );
+define( 'CHECKIFDEADVERSION', '1.3.2' );
 
 class CheckIfDead {
 
@@ -549,6 +549,12 @@ class CheckIfDead {
 		if ( preg_match( '/^([a-z0-9\+\-\.]*:)?\/([^\/].+)/i', $url, $match ) ) {
 			$url = $match[1] . "//" . $match[2];
 		}
+		// Sometimes protocol relative URLs are not formatted correctly
+		// This checks to see if the URL starts with :/ or ://
+		// We will assume http in these cases
+		if ( preg_match( '/^:\/\/?([^\/].+)/i', $url, $match ) ) {
+			$url = "http://" . $match[1];
+		}
 		// If we're missing the scheme and double slashes entirely, assume http.
 		// The parse_url function fails without this
 		if ( !preg_match( '/(?:[a-z0-9\+\-\.]*:)?\/\//i', $url ) ) {
@@ -562,8 +568,11 @@ class CheckIfDead {
 			$url
 		);
 		$parts = parse_url( $encodedUrl );
-		foreach ( $parts as $name => $value ) {
-			$parts[$name] = urldecode( $value );
+		// Check if the URL was actually parsed.
+		if ( $parts !== false ) {
+			foreach ( $parts as $name => $value ) {
+				$parts[$name] = urldecode( $value );
+			}
 		}
 
 		return $parts;
