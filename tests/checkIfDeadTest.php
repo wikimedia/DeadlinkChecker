@@ -42,7 +42,6 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
 			[ 'http://worldchiropracticalliance.org/resources/greens/green4.htm', true ],
-			[ 'http://www.copart.co.uk/c2/specialSearch.html?_eventId=getLot&execution=e1s2&lotId=10543580', true ],
 			[ 'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html', true ],
 			[
 				'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=',
@@ -135,7 +134,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907' ],
 			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar#foobar',
 				'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar' ],
-			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art',
+			[ '://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art',
 				'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art' ]
 		];
 		// @codingStandardsIgnoreEnd
