@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.3.2' );
+define( 'CHECKIFDEADVERSION', '1.3.3' );
 
 class CheckIfDead {
 
@@ -467,42 +467,58 @@ class CheckIfDead {
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
-			// Pluses in the path are legal characters that do not need to be encoded.
-			// Some URLs don't like the plus encoded.
-			$parts['path'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['path'] );
-			$url .= implode( '/',
-				array_map( "rawurlencode",
-					explode( '/',
-						substr(
-							rawurldecode( $parts['path'] ), 1
-						)
-					)
-				)
-			);
-		}
-		if ( isset( $parts['query'] ) ) {
-			// Encoding the + means a literal plus in the query.
-			// A plus means a space otherwise.
-			$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
-			// We have a query string, all queries start with a ?
-			$url .= "?";
-			// Break apart the query string.  Separate them into all of the arguments passed.
-			$parts['query'] = explode( '&', $parts['query'] );
-			// We need to encode each argument
-			foreach ( $parts['query'] as $index => $argument ) {
-				// Make sure we don't inadvertently encode the first instance of "="
-				// Otherwise we break the query.
-				$parts['query'][$index] = implode( '=',
+			// There are legal characters that do not need encoding in the path
+			// and some webservers cannot handle these being encoded
+			// If we only have legal characters, we can skip sanitizing the path
+			$legalRegex = '/[^0-9a-zA-Z$\-_.+!*\'(),\/]/';
+			if ( preg_match( $legalRegex, $parts['path'] ) ) {
+				// Pluses in the path are legal characters that do not need to be encoded.
+				// Some URLs don't like the plus encoded.
+				$parts['path'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['path'] );
+				$url .= implode( '/',
 					array_map( "rawurlencode",
-						array_map( "urldecode",
-							explode( '=', $parts['query'][$index], 2 )
+						explode( '/',
+							substr(
+								rawurldecode( $parts['path'] ), 1
+							)
 						)
 					)
 				);
+			} else {
+				$url .= substr( $parts['path'], 1 );
 			}
-			// Put the query string back together.
-			$parts['query'] = implode( '&', $parts['query'] );
-			$url .= $parts['query'];
+		}
+		if ( isset( $parts['query'] ) ) {
+			$url .= "?";
+			// There are legal characters that do not need encoding in the query
+			// and some webservers cannot handle these being encoded
+			// If we only have legal characters, we can skip sanitizing the query
+			$legalRegex = '/[^0-9a-zA-Z$\-_.+!*\'(),\&\=]/';
+			if ( preg_match( $legalRegex, $parts['query'] ) ) {
+				// Encoding the + means a literal plus in the query.
+				// A plus means a space otherwise.
+				$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
+				// We have a query string, all queries start with a ?
+				// Break apart the query string.  Separate them into all of the arguments passed.
+				$parts['query'] = explode( '&', $parts['query'] );
+				// We need to encode each argument
+				foreach ( $parts['query'] as $index => $argument ) {
+					// Make sure we don't inadvertently encode the first instance of "="
+					// Otherwise we break the query.
+					$parts['query'][$index] = implode( '=',
+						array_map( "rawurlencode",
+							array_map( "urldecode",
+								explode( '=', $parts['query'][$index], 2 )
+							)
+						)
+					);
+				}
+				// Put the query string back together.
+				$parts['query'] = implode( '&', $parts['query'] );
+				$url .= $parts['query'];
+			} else {
+				$url .= $parts['query'];
+			}
 		}
 		if ( $stripFragment === false && isset( $parts['fragment'] ) ) {
 			// We don't need to encode the fragment, that's handled client side anyways.
