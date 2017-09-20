@@ -248,7 +248,7 @@ class CheckIfDead {
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
 			$options[CURLOPT_FTPSSLAUTH] = CURLFTPAUTH_DEFAULT;
 			$options[CURLOPT_FTP_FILEMETHOD] = CURLFTPMETHOD_SINGLECWD;
-			if( $full ) {
+			if ( $full ) {
 				// Set CURLOPT_USERPWD for anonymous FTP login
 				$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
 			}
