@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.3.3' );
+define( 'CHECKIFDEADVERSION', '1.4' );
 
 class CheckIfDead {
 
@@ -248,10 +248,12 @@ class CheckIfDead {
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
 			$options[CURLOPT_FTPSSLAUTH] = CURLFTPAUTH_DEFAULT;
 			$options[CURLOPT_FTP_FILEMETHOD] = CURLFTPMETHOD_SINGLECWD;
+			if( $full ) {
+				// Set CURLOPT_USERPWD for anonymous FTP login
+				$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
+			}
 		}
 		if ( $full ) {
-			// Set CURLOPT_USERPWD for anonymous FTP login
-			$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
 			$options[CURLOPT_HTTPHEADER] = $header;
@@ -342,9 +344,15 @@ class CheckIfDead {
 			return true;
 		}
 		if ( $httpCode === 0 ) {
-			$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
+			if ( $full ) {
+				$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
 
-			return true;
+				return true;
+			} else {
+				// Some servers don't support NOBODY requests, so if redirect to a 404 page
+				// is returned, we'll check the URL again with a full page request.
+				return null;
+			}
 		}
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {

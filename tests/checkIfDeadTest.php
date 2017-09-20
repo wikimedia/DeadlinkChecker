@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../vendor/autoload.php';
+
 use Wikimedia\DeadlinkChecker\CheckIfDead;
 
 class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
@@ -42,6 +43,15 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://www.filmportal.de/df/3b/Uebersicht,,,,,,,,6C95360CB3D34FDCB6A025F2618E7495,,,,,,,,,,,,,,,,,,,,,,,,,,,.html',
 				false
 			],
+			[ 'http://www.beweb.chiesacattolica.it/diocesi/diocesi/503/Aosta', false ],
+			[ 'http://www.dioceseoflascruces.org/', false ],
+			[ 'http://www.worcesterdiocese.org/', false ],
+			[ 'http://www.catholicdos.org/', false ],
+			[ 'http://www.diocesitivoli.it/', false ],
+			[ 'http://www.victoriadiocese.org/', false ],
+			[ 'http://www.saginaw.org/', false ],
+			[ 'http://www.dioceseofprovidence.org/', false ],
+			[ 'http://www.rcdop.org.uk/', false ],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
