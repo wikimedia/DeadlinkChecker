@@ -92,7 +92,7 @@ class CheckIfDead {
 		$curl_instances = [];
 		$deadLinks = [];
 		foreach ( $urls as $id => $url ) {
-			if( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
+			if ( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
 				$curl_instances[$id] = curl_init();
 				if ( $curl_instances[$id] === false ) {
 					return null;
@@ -122,7 +122,7 @@ class CheckIfDead {
 		}
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
-			if( isset( $curl_instances[$id] ) ) {
+			if ( isset( $curl_instances[$id] ) ) {
 				$headers = curl_getinfo( $curl_instances[$id] );
 				$error = curl_errno( $curl_instances[$id] );
 				$errormsg = curl_error( $curl_instances[$id] );
@@ -277,7 +277,9 @@ class CheckIfDead {
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
 			$options[CURLOPT_HTTPHEADER] = $header;
-			if ( $requestType != "MMS" && $requestType != "RTSP" ) $options[CURLOPT_ENCODING] = 'gzip,deflate';
+			if ( $requestType != "MMS" && $requestType != "RTSP" ) {
+				$options[CURLOPT_ENCODING] = 'gzip,deflate';
+			}
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
