@@ -52,6 +52,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://www.saginaw.org/', false ],
 			[ 'http://www.dioceseofprovidence.org/', false ],
 			[ 'http://www.rcdop.org.uk/', false ],
+			[ 'mms://200.23.59.10/radiotam', false ],
+			[ 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1', false ],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
@@ -61,6 +63,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=',
 				true
 			],
+			[ 'mms://209.0.211.10/live', true ],
+			[ 'chrome://examplefunction', null ]
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
@@ -151,7 +155,8 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art',
 				'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art' ],
 			[ '://www.musicvf.com/',
-				'http://www.musicvf.com/' ]
+				'http://www.musicvf.com/' ],
+			[ 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1', 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1' ]
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {

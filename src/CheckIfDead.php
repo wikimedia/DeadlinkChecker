@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.4' );
+define( 'CHECKIFDEADVERSION', '1.5' );
 
 class CheckIfDead {
 
@@ -17,15 +17,21 @@ class CheckIfDead {
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
 
+	/**
+	 * UserAgent for the media player we are pretending to be
+	 */
+	// @codingStandardsIgnoreStart Line exceeds 100 characters
+	protected $mediaAgent = "Windows-Media-Player/12.0.15063.608";
+
 	// @codingStandardsIgnoreEnd
 
 	/**
-	 *  HTTP codes that do not indicate a dead link
+	 *  HTTP/RTSP/MMS codes that do not indicate a dead link
 	 */
 	protected $goodHttpCodes = [
 		100, 101, 102, 103,
 		200, 201, 202, 203, 204, 205, 206, 207, 208, 226,
-		300, 301, 302, 303, 304, 305, 306, 307, 308,
+		250, 300, 301, 302, 303, 304, 305, 306, 307, 308,
 	];
 
 	/**
@@ -86,17 +92,19 @@ class CheckIfDead {
 		$curl_instances = [];
 		$deadLinks = [];
 		foreach ( $urls as $id => $url ) {
-			$curl_instances[$id] = curl_init();
-			if ( $curl_instances[$id] === false ) {
-				return null;
+			if( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
+				$curl_instances[$id] = curl_init();
+				if ( $curl_instances[$id] === false ) {
+					return null;
+				}
+				// Get appropriate curl options
+				curl_setopt_array(
+					$curl_instances[$id],
+					$this->getCurlOptions( $this->sanitizeURL( $url ), false )
+				);
+				// Add the instance handle
+				curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
 			}
-			// Get appropriate curl options
-			curl_setopt_array(
-				$curl_instances[$id],
-				$this->getCurlOptions( $this->sanitizeURL( $url ), false )
-			);
-			// Add the instance handle
-			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
 		}
 		// Let's do the curl operations
 		$active = null;
@@ -114,24 +122,28 @@ class CheckIfDead {
 		}
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
-			$headers = curl_getinfo( $curl_instances[$id] );
-			$error = curl_errno( $curl_instances[$id] );
-			$errormsg = curl_error( $curl_instances[$id] );
-			$curlInfo = [
-				'http_code' => $headers['http_code'],
-				'effective_url' => $headers['url'],
-				'curl_error' => $error,
-				'curl_error_msg' => $errormsg,
-				'url' => $this->sanitizeURL( $url ),
-				'rawurl' => $url
-			];
-			// Remove each of the individual handles
-			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
-			// Deduce whether the site is dead or alive
-			$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
-			// If we got back a null, we should do a full page request
-			if ( is_null( $deadLinks[$url] ) ) {
-				$fullCheckURLs[] = $url;
+			if( isset( $curl_instances[$id] ) ) {
+				$headers = curl_getinfo( $curl_instances[$id] );
+				$error = curl_errno( $curl_instances[$id] );
+				$errormsg = curl_error( $curl_instances[$id] );
+				$curlInfo = [
+					'http_code' => $headers['http_code'],
+					'effective_url' => $headers['url'],
+					'curl_error' => $error,
+					'curl_error_msg' => $errormsg,
+					'url' => $this->sanitizeURL( $url ),
+					'rawurl' => $url
+				];
+				// Remove each of the individual handles
+				curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
+				// Deduce whether the site is dead or alive
+				$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
+				// If we got back a null, we should do a full page request
+				if ( is_null( $deadLinks[$url] ) ) {
+					$fullCheckURLs[] = $url;
+				}
+			} else {
+				$deadLinks[$url] = null;
 			}
 		}
 		// Close resource
@@ -219,18 +231,10 @@ class CheckIfDead {
 	 * @return array Options for curl
 	 */
 	protected function getCurlOptions( $url, $full = false ) {
-		$header = [
-			// @codingStandardsIgnoreStart Line exceeds 100 characters
-			'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
-			// @codingStandardsIgnoreEnd
-			'Cache-Control: max-age=0',
-			'Connection: keep-alive',
-			'Keep-Alive: 300',
-			'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-			'Accept-Language: en-us,en;q=0.5',
-			'Accept-Encoding: gzip,deflate',
-			'Pragma: '
-		];
+		$requestType = $this->getRequestType( $url );
+		if ( $requestType == "MMS" ) {
+			$url = str_ireplace( "mms://", "rtsp://", $url );
+		}
 		$options = [
 			CURLOPT_URL => $url,
 			CURLOPT_HEADER => 1,
@@ -238,11 +242,27 @@ class CheckIfDead {
 			CURLOPT_AUTOREFERER => true,
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_TIMEOUT => 30,
-			CURLOPT_USERAGENT => $this->userAgent,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
-		$requestType = $this->getRequestType( $url );
+		if ( $requestType == "RTSP" || $requestType == "MMS" ) {
+			$header = [];
+			$options [CURLOPT_USERAGENT] = $this->mediaAgent;
+		} else {
+			$header = [
+				// @codingStandardsIgnoreStart Line exceeds 100 characters
+				'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+				// @codingStandardsIgnoreEnd
+				'Cache-Control: max-age=0',
+				'Connection: keep-alive',
+				'Keep-Alive: 300',
+				'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+				'Accept-Language: en-us,en;q=0.5',
+				'Accept-Encoding: gzip,deflate',
+				'Pragma: '
+			];
+			$options[CURLOPT_USERAGENT] = $this->userAgent;
+		}
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
 			$options[CURLOPT_FTP_USE_EPSV] = 1;
@@ -257,7 +277,7 @@ class CheckIfDead {
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = 60;
 			$options[CURLOPT_HTTPHEADER] = $header;
-			$options[CURLOPT_ENCODING] = 'gzip,deflate';
+			if ( $requestType != "MMS" && $requestType != "RTSP" ) $options[CURLOPT_ENCODING] = 'gzip,deflate';
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
@@ -269,13 +289,21 @@ class CheckIfDead {
 	 * Get request type
 	 *
 	 * @param $url String URL we are checking against
-	 * @return string "FTP" or "HTTP"
+	 * @return string "FTP", "MMS", "RTSP", or "HTTP"
 	 */
 	protected function getRequestType( $url ) {
-		if ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) == "ftp" ) {
-			return "FTP";
-		} else {
-			return "HTTP";
+		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
+			case "ftp":
+				return "FTP";
+			case "mms":
+				return "MMS";
+			case "rtsp":
+				return "RTSP";
+			case "http":
+			case "https":
+				return "HTTP";
+			default:
+				return "UNSUPPORTED";
 		}
 	}
 
@@ -355,7 +383,7 @@ class CheckIfDead {
 			}
 		}
 		// Check for valid non-error codes for HTTP or FTP
-		if ( $requestType == "HTTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
+		if ( $requestType != "FTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
 
 			return true;
@@ -466,6 +494,12 @@ class CheckIfDead {
 						) {
 							break;
 						}
+					case 554:
+						if ( isset( $parts['scheme'] ) &&
+							strtolower( $parts['scheme'] ) == "rtsp"
+						) {
+							break;
+						}
 					default:
 						$url .= ":" . $parts['port'];
 				}
@@ -478,7 +512,7 @@ class CheckIfDead {
 			// There are legal characters that do not need encoding in the path
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the path
-			$legalRegex = '/[^0-9a-zA-Z$\-_.+!*\'(),\/]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\/\[\]\@\;]/';
 			if ( preg_match( $legalRegex, $parts['path'] ) ) {
 				// Pluses in the path are legal characters that do not need to be encoded.
 				// Some URLs don't like the plus encoded.
@@ -501,7 +535,7 @@ class CheckIfDead {
 			// There are legal characters that do not need encoding in the query
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the query
-			$legalRegex = '/[^0-9a-zA-Z$\-_.+!*\'(),\&\=]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\[\]\@\;\&\=]/';
 			if ( preg_match( $legalRegex, $parts['query'] ) ) {
 				// Encoding the + means a literal plus in the query.
 				// A plus means a space otherwise.
