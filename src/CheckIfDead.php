@@ -247,8 +247,9 @@ class CheckIfDead {
 		];
 		if ( $requestType == "RTSP" || $requestType == "MMS" ) {
 			$header = [];
-			$options [CURLOPT_USERAGENT] = $this->mediaAgent;
+			$options[CURLOPT_USERAGENT] = $this->mediaAgent;
 		} else {
+			// Emulate a web browser request but make it accept more than a web browser
 			$header = [
 				// @codingStandardsIgnoreStart Line exceeds 100 characters
 				'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
@@ -257,8 +258,8 @@ class CheckIfDead {
 				'Connection: keep-alive',
 				'Keep-Alive: 300',
 				'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-				'Accept-Language: en-us,en;q=0.5',
-				'Accept-Encoding: gzip,deflate',
+				'Accept-Language: en-us,en;q=0.7,*;q=0.5',
+				'Accept-Encoding: *',
 				'Pragma: '
 			];
 			$options[CURLOPT_USERAGENT] = $this->userAgent;
