@@ -54,6 +54,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://www.rcdop.org.uk/', false ],
 			[ 'mms://200.23.59.10/radiotam', false ],
 			[ 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1', false ],
+			[ 'http://parlinfo.aph.gov.au/parlInfo/search/display/display.w3p;query=Id%3A%22handbook%2Fnewhandbook%2F2014-10-31%2F0049%22', false ],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
