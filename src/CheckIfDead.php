@@ -512,17 +512,10 @@ class CheckIfDead {
 		// This avoids possible 400 Bad Response errors.
 		$url .= "/";
 		if ( isset( $parts['path'] ) && strlen( $parts['path'] ) > 1 ) {
-			// If we don't have a query, and we have an instance of a
-			// semicolon, then assume that is the start of a query.
-			if ( !isset( $parts['query'] ) && strpos( $parts['path'], ";" ) !== false ) {
-				$parts['query'] = substr( $parts['path'], strpos( $parts['path'], ";" ) );
-				$parts['path'] = substr_replace( $parts['path'], "", strpos( $parts['path'], ";" ) );
-				$noQueryDelimiter = true;
-			}
 			// There are legal characters that do not need encoding in the path
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the path
-			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\/\[\]\@\;]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\/\[\]\@\;\=\%]/';
 			if ( preg_match( $legalRegex, $parts['path'] ) ) {
 				// Pluses in the path are legal characters that do not need to be encoded.
 				// Some URLs don't like the plus encoded.
@@ -541,17 +534,12 @@ class CheckIfDead {
 			}
 		}
 		if ( isset( $parts['query'] ) ) {
-			// If the ? is omitted in the URL, then we are likely using a ; for the query.
-			// Standard PHP doesn't support this.
-			if ( !isset( $noQueryDelimiter ) ) {
-				$url .= "?";
-			} else {
-				$parts['query'] = str_replace( ";", "&", $parts['query'] );
-			}
+			$url .= "?";
+
 			// There are legal characters that do not need encoding in the query
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the query
-			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\[\]\@\;\&\=]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\[\]\@\;\&\=\%]/';
 			if ( preg_match( $legalRegex, $parts['query'] ) ) {
 				// Encoding the + means a literal plus in the query.
 				// A plus means a space otherwise.
@@ -573,9 +561,7 @@ class CheckIfDead {
 				}
 				// Put the query string back together.
 				$parts['query'] = implode( '&', $parts['query'] );
-				if ( isset( $noQueryDelimiter ) ) {
-					$parts['query'] = str_replace( "&", ";", $parts['query'] );
-				}
+
 				$url .= $parts['query'];
 			} else {
 				$url .= $parts['query'];
