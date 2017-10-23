@@ -49,5 +49,7 @@ array (
 )
 ```
 
+Note that these functions will return `null` if they are unable to determine whether a link is alive or dead.
+
 ### License
 This code is distributed under [GNU GPLv3+](https://www.gnu.org/copyleft/gpl.html)
