@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.5' );
+define( 'CHECKIFDEADVERSION', '1.5.1' );
 
 class CheckIfDead {
 
@@ -515,7 +515,7 @@ class CheckIfDead {
 			// There are legal characters that do not need encoding in the path
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the path
-			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\/\[\]\@\;]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\/\[\]\@\;\=\%]/';
 			if ( preg_match( $legalRegex, $parts['path'] ) ) {
 				// Pluses in the path are legal characters that do not need to be encoded.
 				// Some URLs don't like the plus encoded.
@@ -535,10 +535,11 @@ class CheckIfDead {
 		}
 		if ( isset( $parts['query'] ) ) {
 			$url .= "?";
+
 			// There are legal characters that do not need encoding in the query
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the query
-			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\[\]\@\;\&\=]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\'\(\)\,\~\:\[\]\@\;\&\=\%]/';
 			if ( preg_match( $legalRegex, $parts['query'] ) ) {
 				// Encoding the + means a literal plus in the query.
 				// A plus means a space otherwise.
@@ -560,6 +561,7 @@ class CheckIfDead {
 				}
 				// Put the query string back together.
 				$parts['query'] = implode( '&', $parts['query'] );
+
 				$url .= $parts['query'];
 			} else {
 				$url .= $parts['query'];
@@ -622,7 +624,7 @@ class CheckIfDead {
 			$url = "http://" . $url;
 		}
 		$encodedUrl = preg_replace_callback(
-			'%[^:/@?&=#]+%sD',
+			'%[^:/@?&=#;]+%sD',
 			function ( $matches ) {
 				return urlencode( $matches[0] );
 			},
