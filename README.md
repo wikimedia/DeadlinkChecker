@@ -24,8 +24,6 @@ $ git clone https://github.com/wikimedia/DeadlinkChecker.git
 
 
 ### Usage
-Code to determine if a given link on the web is dead or alive.
-
 Sample usage:
 
 ##### For checking a single link:
