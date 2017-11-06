@@ -2,7 +2,7 @@
 This is a PHP library for detecting whether URLs on the internet are alive or dead via cURL. It includes the following features:
 * Supports HTTP, HTTPS, FTP, MMS, and RTSP URLs
 * Supports [internationalized domain names](https://en.wikipedia.org/wiki/Internationalized_domain_name)
-* Correctly reports [soft 404s](https://en.wikipedia.org/wiki/HTTP_404#Soft_404_errors) as dead
+* Correctly reports [soft 404s](https://en.wikipedia.org/wiki/HTTP_404#Soft_404_errors) as dead (in most cases)
 
 [![Build Status](https://travis-ci.org/wikimedia/DeadlinkChecker.svg?branch=master)](https://travis-ci.org/wikimedia/DeadlinkChecker)
 ### Installation
