@@ -290,7 +290,7 @@ class CheckIfDead {
 	 * Get request type
 	 *
 	 * @param $url String URL we are checking against
-	 * @return string "FTP", "MMS", "RTSP", or "HTTP"
+	 * @return string "FTP", "MMS", "RTSP", "HTTP", or "UNSUPPORTED"
 	 */
 	protected function getRequestType( $url ) {
 		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
