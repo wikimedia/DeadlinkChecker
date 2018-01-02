@@ -72,7 +72,7 @@ class CheckIfDead {
 	 *
 	 * @param int $curlTimeoutNoBody Curl timeout for header-only page requests, in seconds
 	 * @param int $curlTimeoutFull Curl timeout for full page requests, in seconds
-	 */	
+	 */
 	public function __construct( $curlTimeoutNoBody = 30, $curlTimeoutFull = 60 ) {
 		$this->curlTimeoutNoBody = (int)$curlTimeoutNoBody;
 		$this->curlTimeoutFull = (int)$curlTimeoutFull;
