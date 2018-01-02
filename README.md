@@ -29,9 +29,9 @@ $ git clone https://github.com/wikimedia/DeadlinkChecker.git
 ##### For checking a single link:
 
 ```
-$obj = new checkIfDead();
+$deadLinkChecker = new checkIfDead();
 $url = 'https://en.wikipedia.org';
-$exec = $obj->isLinkDead( $url );
+$exec = $deadLinkChecker->isLinkDead( $url );
 echo var_export( $exec );
 ```
 Prints:
@@ -40,9 +40,9 @@ false
 ```
 ##### For checking an array of links:
 ```
-$obj = new checkIfDead();
+$deadLinkChecker = new checkIfDead();
 $urls = [ 'https://en.wikipedia.org/nothing', 'https://en.wikipedia.org' ];
-$exec = $obj->areLinksDead( $urls );
+$exec = $deadLinkChecker->areLinksDead( $urls );
 echo var_export( $exec );
 ```
 Prints:
@@ -59,7 +59,7 @@ Note that these functions will return `null` if they are unable to determine whe
 
 You can control how long it takes before page requests timeout by passing parameters to the constructor. To set the header-only page requests to a 10 second timeout and the full page requests to a 20 second timeout, you would use the following:
 ```
-$obj = new checkIfDead( 10, 20 );
+$deadLinkChecker = new checkIfDead( 10, 20 );
 ```
 
 ### License
