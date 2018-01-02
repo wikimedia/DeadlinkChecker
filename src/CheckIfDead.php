@@ -7,9 +7,19 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.5.1' );
+define( 'CHECKIFDEADVERSION', '1.6.0' );
 
 class CheckIfDead {
+
+	/**
+	 * Curl timeout for header-only page requests (CURLOPT_NOBODY), in seconds
+	 */
+	protected $curlTimeoutNoBody;
+
+	/**
+	 * Curl timeout for full page requests, in seconds
+	 */
+	protected $curlTimeoutFull;
 
 	/**
 	 * UserAgent for the device/browser we are pretending to be
@@ -56,6 +66,17 @@ class CheckIfDead {
 	 * dead, indexed by URL
 	 */
 	protected $errors = [];
+
+	/**
+	 * Set up the class instance
+	 *
+	 * @param int $curlTimeoutNoBody Curl timeout for header-only page requests, in seconds
+	 * @param int $curlTimeoutFull Curl timeout for full page requests, in seconds
+	 */	
+	public function __construct( $curlTimeoutNoBody = 30, $curlTimeoutFull = 60 ) {
+		$this->curlTimeoutNoBody = (int)$curlTimeoutNoBody;
+		$this->curlTimeoutFull = (int)$curlTimeoutFull;
+	}
 
 	/**
 	 * Check if a single URL is dead by performing a curl request
@@ -239,7 +260,7 @@ class CheckIfDead {
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_AUTOREFERER => true,
 			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_TIMEOUT => 30,
+			CURLOPT_TIMEOUT => $this->curlTimeoutNoBody,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
@@ -274,7 +295,7 @@ class CheckIfDead {
 		}
 		if ( $full ) {
 			// Extend timeout since we are requesting the full body
-			$options[CURLOPT_TIMEOUT] = 60;
+			$options[CURLOPT_TIMEOUT] = $this->curlTimeoutFull;
 			$options[CURLOPT_HTTPHEADER] = $header;
 			if ( $requestType != "MMS" && $requestType != "RTSP" ) {
 				$options[CURLOPT_ENCODING] = 'gzip,deflate';
