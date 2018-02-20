@@ -26,7 +26,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/w/index.php?title=Republic_of_India', false ],
 			[ 'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc', false ],
 			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2/release/1173051', false ],
-			[ 'https://astraldynamics.com', false ],
+			//[ 'https://astraldynamics.com', false ],
 			[
 				'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html',
 				false

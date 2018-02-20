@@ -195,13 +195,11 @@ class CheckIfDead {
 					// Deduce whether the site is dead or alive
 					$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
 					if ( $this->verbose === true ) {
-						foreach ( $deadLinks as $url => $result ) {
-							if ( $result === true ) {
-								echo "$url is DEAD!\n";
-							}
-							if ( $result === false ) {
-								echo "$url is ALIVE!\n";
-							}
+						if ( $deadLinks[$url] === true ) {
+							echo "$url is DEAD!\n";
+						}
+						if ( $deadLinks[$url] === false ) {
+							echo "$url is ALIVE!\n";
 						}
 					}
 					// If we got back a null, we should do a full page request
