@@ -97,7 +97,13 @@ class CheckIfDead {
 	 * @param bool $sequentialTests Delay queries on URLs sharing the same domain to avoid blacklisting
 	 * @param bool $verbose Generate verbose output
 	 */
-	public function __construct( $curlTimeoutNoBody = 30, $curlTimeoutFull = 60, $userAgent = false, $sequentialTests = true, $verbose = false ) {
+	public function __construct(
+		$curlTimeoutNoBody = 30,
+		$curlTimeoutFull = 60,
+		$userAgent = false,
+		$sequentialTests = true,
+		$verbose = false
+	) {
 		$this->curlTimeoutNoBody = (int)$curlTimeoutNoBody;
 		$this->curlTimeoutFull = (int)$curlTimeoutFull;
 		$this->customUserAgent = $userAgent;
