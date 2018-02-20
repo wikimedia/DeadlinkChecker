@@ -7,11 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-<<<<<<< HEAD
-define( 'CHECKIFDEADVERSION', '1.5.1' );
-=======
-define( 'CHECKIFDEADVERSION', '1.6.0' );
->>>>>>> wikimedia/master
+define( 'CHECKIFDEADVERSION', '1.7.0' );
 
 class CheckIfDead {
 
@@ -26,11 +22,22 @@ class CheckIfDead {
 	protected $curlTimeoutFull;
 
 	/**
+	 * Curl queue for delaying requests going to the same domain.
+	 */
+	protected $curlQueue;
+
+	/**
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36";
+
 	// @codingStandardsIgnoreEnd
+
+	/**
+	 * User defined UserAgent
+	 */
+	protected $customUserAgent = false;
 
 	/**
 	 * UserAgent for the media player we are pretending to be
@@ -72,14 +79,30 @@ class CheckIfDead {
 	protected $errors = [];
 
 	/**
+	 * Whether or not to turn queuing on or off
+	 */
+	protected $queuedTesting = true;
+
+	/**
+	 * Whether or not to generate verbose output
+	 */
+	protected $verbose = false;
+
+	/**
 	 * Set up the class instance
 	 *
 	 * @param int $curlTimeoutNoBody Curl timeout for header-only page requests, in seconds
 	 * @param int $curlTimeoutFull Curl timeout for full page requests, in seconds
+	 * @param string $userAgent A custom user agent to pass in web requests
+	 * @param bool $sequentialTests Delay queries on URLs sharing the same domain to avoid blacklisting
+	 * @param bool $verbose Generate verbose output
 	 */
-	public function __construct( $curlTimeoutNoBody = 30, $curlTimeoutFull = 60 ) {
+	public function __construct( $curlTimeoutNoBody = 30, $curlTimeoutFull = 60, $userAgent = false, $sequentialTests = true, $verbose = false ) {
 		$this->curlTimeoutNoBody = (int)$curlTimeoutNoBody;
 		$this->curlTimeoutFull = (int)$curlTimeoutFull;
+		$this->customUserAgent = $userAgent;
+		$this->queuedTesting = (bool)$sequentialTests;
+		$this->verbose = (bool)$verbose;
 	}
 
 	/**
@@ -112,71 +135,114 @@ class CheckIfDead {
 		if ( $multicurl_resource === false ) {
 			return null;
 		}
-		$curl_instances = [];
 		$deadLinks = [];
-		foreach ( $urls as $id => $url ) {
-			if ( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
-				$curl_instances[$id] = curl_init();
-				if ( $curl_instances[$id] === false ) {
-					return null;
-				}
-				// Get appropriate curl options
-				curl_setopt_array(
-					$curl_instances[$id],
-					$this->getCurlOptions( $this->sanitizeURL( $url ), false )
-				);
-				// Add the instance handle
-				curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
+		$this->queueRequests( $urls );
+		if ( $this->verbose === true ) {
+			if ( count( $this->curlQueue ) > 1 ) {
+				echo "Delaying one or more links!\n";
 			}
 		}
-		// Let's do the curl operations
-		$active = null;
-		do {
-			$mrc = curl_multi_exec( $multicurl_resource, $active );
-		} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
-		while ( $active && $mrc == CURLM_OK ) {
-			if ( curl_multi_select( $multicurl_resource ) == -1 ) {
-				// To prevent CPU spike
-				usleep( 100 );
+		foreach ( $this->curlQueue as $urls ) {
+			$curl_instances = [];
+			foreach ( $urls as $id => $url ) {
+				if ( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
+					$curl_instances[$id] = curl_init();
+					if ( $curl_instances[$id] === false ) {
+						return null;
+					}
+					// Get appropriate curl options
+					curl_setopt_array(
+						$curl_instances[$id],
+						$this->getCurlOptions( $this->sanitizeURL( $url ), false )
+					);
+					// Add the instance handle
+					curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
+				} elseif ( $this->verbose === true ) {
+					echo "$url is not supported!\n";
+				}
 			}
+			// Let's do the curl operations
+			$active = null;
 			do {
 				$mrc = curl_multi_exec( $multicurl_resource, $active );
 			} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
-		}
-		// Let's process our curl results and extract the useful information
-		foreach ( $urls as $id => $url ) {
-			if ( isset( $curl_instances[$id] ) ) {
-				$headers = curl_getinfo( $curl_instances[$id] );
-				$error = curl_errno( $curl_instances[$id] );
-				$errormsg = curl_error( $curl_instances[$id] );
-				$curlInfo = [
-					'http_code' => $headers['http_code'],
-					'effective_url' => $headers['url'],
-					'curl_error' => $error,
-					'curl_error_msg' => $errormsg,
-					'url' => $this->sanitizeURL( $url ),
-					'rawurl' => $url
-				];
-				// Remove each of the individual handles
-				curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
-				// Deduce whether the site is dead or alive
-				$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
-				// If we got back a null, we should do a full page request
-				if ( is_null( $deadLinks[$url] ) ) {
-					$fullCheckURLs[] = $url;
+			while ( $active && $mrc == CURLM_OK ) {
+				if ( curl_multi_select( $multicurl_resource ) == -1 ) {
+					// To prevent CPU spike
+					usleep( 100 );
 				}
-			} else {
-				$deadLinks[$url] = null;
+				do {
+					$mrc = curl_multi_exec( $multicurl_resource, $active );
+				} while ( $mrc == CURLM_CALL_MULTI_PERFORM );
+			}
+			// Let's process our curl results and extract the useful information
+			foreach ( $urls as $id => $url ) {
+				if ( isset( $curl_instances[$id] ) ) {
+					$headers = curl_getinfo( $curl_instances[$id] );
+					$error = curl_errno( $curl_instances[$id] );
+					$errormsg = curl_error( $curl_instances[$id] );
+					$curlInfo = [
+						'http_code' => $headers['http_code'],
+						'effective_url' => $headers['url'],
+						'curl_error' => $error,
+						'curl_error_msg' => $errormsg,
+						'url' => $this->sanitizeURL( $url ),
+						'rawurl' => $url
+					];
+					// Remove each of the individual handles
+					curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
+					$curl_instances[$id] = null;
+					// Deduce whether the site is dead or alive
+					$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
+					if ( $this->verbose === true ) {
+						foreach ( $deadLinks as $url => $result ) {
+							if ( $result === true ) {
+								echo "$url is DEAD!\n";
+							}
+							if ( $result === false ) {
+								echo "$url is ALIVE!\n";
+							}
+						}
+					}
+					// If we got back a null, we should do a full page request
+					if ( is_null( $deadLinks[$url] ) ) {
+						$fullCheckURLs[] = $url;
+						if ( $this->verbose === true ) {
+							echo "Running a full check on:\n";
+							foreach ( $fullCheckURLs as $url ) {
+								echo "\t$url\n";
+							}
+						}
+					}
+				} else {
+					$deadLinks[$url] = null;
+					if ( $this->verbose === true ) {
+						echo "Something went wrong with $url!\n";
+					}
+				}
+			}
+			// Do full page requests for URLs that returned null
+			if ( !empty( $fullCheckURLs ) ) {
+				$results = $this->performFullRequest( $fullCheckURLs );
+				if ( $this->verbose === true ) {
+					foreach ( $results as $url => $result ) {
+						if ( $result === true ) {
+							echo "$url is DEAD!\n";
+						}
+						if ( $result === false ) {
+							echo "$url is ALIVE!\n";
+						}
+					}
+				}
+				// Merge back results from full requests into our deadlinks array
+				$deadLinks = array_merge( $deadLinks, $results );
+			}
+			if ( count( $this->curlQueue ) > 1 ) {
+				sleep( 1 );
 			}
 		}
 		// Close resource
 		curl_multi_close( $multicurl_resource );
-		// Do full page requests for URLs that returned null
-		if ( !empty( $fullCheckURLs ) ) {
-			$results = $this->performFullRequest( $fullCheckURLs );
-			// Merge back results from full requests into our deadlinks array
-			$deadLinks = array_merge( $deadLinks, $results );
-		}
 
 		return $deadLinks;
 	}
@@ -247,6 +313,34 @@ class CheckIfDead {
 	}
 
 	/**
+	 * Queue up the URLs creating time-delays between URLs with the same domain.
+	 *
+	 * @param array $urls All the URLs being tested
+	 */
+	protected function queueRequests( $urls ) {
+		$this->curlQueue = [];
+		if ( $this->queuedTesting === false ) {
+			$this->curlQueue[] = $urls;
+
+			return;
+		}
+		foreach ( $urls as $url ) {
+			$domain = $this->parseURL( $url )['host'];
+			$queuedUrl = false;
+			$queueIndex = -1;
+			foreach ( $this->curlQueue as $queueIndex => $urlList ) {
+				if ( !isset( $urlList[$domain] ) ) {
+					$this->curlQueue[$queueIndex][$domain] = $url;
+					$queuedUrl = true;
+				}
+			}
+			if ( $queuedUrl === false ) {
+				$this->curlQueue[++$queueIndex][$domain] = $url;
+			}
+		}
+	}
+
+	/**
 	 * Get CURL options
 	 *
 	 * @param $url String URL we are testing against
@@ -285,7 +379,11 @@ class CheckIfDead {
 				'Accept-Encoding: *',
 				'Pragma: '
 			];
-			$options[CURLOPT_USERAGENT] = $this->userAgent;
+			if ( $this->customUserAgent === false ) {
+				$options[CURLOPT_USERAGENT] = $this->userAgent;
+			} else {
+				$options[CURLOPT_USERAGENT] = $this->customUserAgent;
+			}
 		}
 		if ( $requestType == 'FTP' ) {
 			$options[CURLOPT_FTP_USE_EPRT] = 1;
@@ -304,6 +402,7 @@ class CheckIfDead {
 			if ( $requestType != "MMS" && $requestType != "RTSP" ) {
 				$options[CURLOPT_ENCODING] = 'gzip,deflate';
 			}
+			$options[CURLOPT_USERAGENT] = $this->userAgent;
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
@@ -558,7 +657,6 @@ class CheckIfDead {
 		}
 		if ( isset( $parts['query'] ) ) {
 			$url .= "?";
-
 			// There are legal characters that do not need encoding in the query
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the query
@@ -584,7 +682,6 @@ class CheckIfDead {
 				}
 				// Put the query string back together.
 				$parts['query'] = implode( '&', $parts['query'] );
-
 				$url .= $parts['query'];
 			} else {
 				$url .= $parts['query'];
