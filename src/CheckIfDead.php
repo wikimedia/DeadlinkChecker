@@ -7,23 +7,35 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
+<<<<<<< HEAD
 define( 'CHECKIFDEADVERSION', '1.5.1' );
+=======
+define( 'CHECKIFDEADVERSION', '1.6.0' );
+>>>>>>> wikimedia/master
 
 class CheckIfDead {
+
+	/**
+	 * Curl timeout for header-only page requests (CURLOPT_NOBODY), in seconds
+	 */
+	protected $curlTimeoutNoBody;
+
+	/**
+	 * Curl timeout for full page requests, in seconds
+	 */
+	protected $curlTimeoutFull;
 
 	/**
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
-	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36";
+	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36";
+	// @codingStandardsIgnoreEnd
 
 	/**
 	 * UserAgent for the media player we are pretending to be
 	 */
-	// @codingStandardsIgnoreStart Line exceeds 100 characters
 	protected $mediaAgent = "Windows-Media-Player/12.0.15063.608";
-
-	// @codingStandardsIgnoreEnd
 
 	/**
 	 *  HTTP/RTSP/MMS codes that do not indicate a dead link
@@ -58,6 +70,17 @@ class CheckIfDead {
 	 * dead, indexed by URL
 	 */
 	protected $errors = [];
+
+	/**
+	 * Set up the class instance
+	 *
+	 * @param int $curlTimeoutNoBody Curl timeout for header-only page requests, in seconds
+	 * @param int $curlTimeoutFull Curl timeout for full page requests, in seconds
+	 */
+	public function __construct( $curlTimeoutNoBody = 30, $curlTimeoutFull = 60 ) {
+		$this->curlTimeoutNoBody = (int)$curlTimeoutNoBody;
+		$this->curlTimeoutFull = (int)$curlTimeoutFull;
+	}
 
 	/**
 	 * Check if a single URL is dead by performing a curl request
@@ -241,7 +264,7 @@ class CheckIfDead {
 			CURLOPT_RETURNTRANSFER => true,
 			CURLOPT_AUTOREFERER => true,
 			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_TIMEOUT => 30,
+			CURLOPT_TIMEOUT => $this->curlTimeoutNoBody,
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
 		];
@@ -276,7 +299,7 @@ class CheckIfDead {
 		}
 		if ( $full ) {
 			// Extend timeout since we are requesting the full body
-			$options[CURLOPT_TIMEOUT] = 60;
+			$options[CURLOPT_TIMEOUT] = $this->curlTimeoutFull;
 			$options[CURLOPT_HTTPHEADER] = $header;
 			if ( $requestType != "MMS" && $requestType != "RTSP" ) {
 				$options[CURLOPT_ENCODING] = 'gzip,deflate';
@@ -292,7 +315,7 @@ class CheckIfDead {
 	 * Get request type
 	 *
 	 * @param $url String URL we are checking against
-	 * @return string "FTP", "MMS", "RTSP", or "HTTP"
+	 * @return string "FTP", "MMS", "RTSP", "HTTP", or "UNSUPPORTED"
 	 */
 	protected function getRequestType( $url ) {
 		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
