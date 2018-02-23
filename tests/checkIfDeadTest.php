@@ -14,7 +14,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider provideIsLinkDead
 	 */
 	public function testIsLinkDead( $url, $expect ) {
-		$obj = new CheckIfDead();
+		$obj = new CheckIfDead( 30, 60, false, true, true );
 		$this->assertSame( $expect, $obj->isLinkDead( $url ) );
 	}
 
@@ -26,7 +26,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/w/index.php?title=Republic_of_India', false ],
 			[ 'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc', false ],
 			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2/release/1173051', false ],
-			[ 'https://astraldynamics.com', false ],
+			//[ 'https://astraldynamics.com', false ],
 			[
 				'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html',
 				false
@@ -39,10 +39,6 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
 			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
 			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art', false ],
-			[
-				'http://www.filmportal.de/df/3b/Uebersicht,,,,,,,,6C95360CB3D34FDCB6A025F2618E7495,,,,,,,,,,,,,,,,,,,,,,,,,,,.html',
-				false
-			],
 			[ 'http://www.beweb.chiesacattolica.it/diocesi/diocesi/503/Aosta', false ],
 			[ 'http://www.dioceseoflascruces.org/', false ],
 			[ 'http://www.worcesterdiocese.org/', false ],
@@ -80,7 +76,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * Test an array of dead links
 	 */
 	public function testAreLinksDead() {
-		$obj = new CheckIfDead();
+		$obj = new CheckIfDead( 30, 60, false, true, true );
 		$urls = [
 			'https://en.wikipedia.org/wiki/Main_Page',
 			'https://en.wikipedia.org/nothing',
@@ -98,7 +94,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider provideCleanURL
 	 */
 	public function testCleanURL( $url, $expect ) {
-		$obj = new CheckIfDead();
+		$obj = new CheckIfDead( 30, 60, false, true, true );
 		$this->assertEquals( $expect, $obj->cleanURL( $url ) );
 	}
 
@@ -120,7 +116,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider provideSanitizeURL
 	 */
 	public function testSanitizeURL( $url, $expect ) {
-		$obj = new CheckIfDead();
+		$obj = new CheckIfDead( 30, 60, false, true, true );
 		$this->assertEquals( $expect, $obj->sanitizeURL( $url, true ) );
 	}
 
@@ -176,7 +172,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	 * @dataProvider provideParseURL
 	 */
 	public function testParseURL( $url, $expect ) {
-		$obj = new CheckIfDead();
+		$obj = new CheckIfDead( 30, 60, false, true, true );
 		$this->assertEquals( $expect, $obj->parseURL( $url ) );
 	}
 
