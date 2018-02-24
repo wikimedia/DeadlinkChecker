@@ -10,7 +10,7 @@
     "link"
   ],
   "homepage": "https://www.mediawiki.org/wiki/DeadlinkChecker",
-  "license": "GPL-3+",
+  "license": "GPL-3.0-or-later",
   "authors": [
     {
       "name": "Niharika Kohli",
