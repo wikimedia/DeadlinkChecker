@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.7.0' );
+define( 'CHECKIFDEADVERSION', '1.7.1' );
 
 class CheckIfDead {
 
@@ -333,7 +333,7 @@ class CheckIfDead {
 			$queuedUrl = false;
 			$queueIndex = -1;
 			foreach ( $this->curlQueue as $queueIndex => $urlList ) {
-				if ( !isset( $urlList[$domain] ) ) {
+				if ( $queuedUrl === false && !isset( $urlList[$domain] ) ) {
 					$this->curlQueue[$queueIndex][$domain] = $url;
 					$queuedUrl = true;
 				}
