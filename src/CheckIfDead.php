@@ -134,8 +134,6 @@ class CheckIfDead {
 	 *     true (dead) or false (alive).
 	 */
 	public function areLinksDead( $urls ) {
-		// Array of URLs we want to send in for a full check
-		$fullCheckURLs = [];
 		// Create multiple curl handle
 		$multicurl_resource = curl_multi_init();
 		if ( $multicurl_resource === false ) {
@@ -150,6 +148,8 @@ class CheckIfDead {
 		}
 		foreach ( $this->curlQueue as $urls ) {
 			$curl_instances = [];
+			// Array of URLs we want to send in for a full check
+			$fullCheckURLs = [];
 			foreach ( $urls as $id => $url ) {
 				if ( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
 					$curl_instances[$id] = curl_init();
