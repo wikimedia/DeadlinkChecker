@@ -211,12 +211,6 @@ class CheckIfDead {
 					// If we got back a null, we should do a full page request
 					if ( is_null( $deadLinks[$url] ) ) {
 						$fullCheckURLs[] = $url;
-						if ( $this->verbose === true ) {
-							echo "Running a full check on:\n";
-							foreach ( $fullCheckURLs as $url ) {
-								echo "\t$url\n";
-							}
-						}
 					}
 				} else {
 					$deadLinks[$url] = null;
@@ -227,6 +221,12 @@ class CheckIfDead {
 			}
 			// Do full page requests for URLs that returned null
 			if ( !empty( $fullCheckURLs ) ) {
+				if ( $this->verbose === true ) {
+					echo "Running a full check on:\n";
+					foreach ( $fullCheckURLs as $url ) {
+						echo "\t$url\n";
+					}
+				}
 				$results = $this->performFullRequest( $fullCheckURLs );
 				if ( $this->verbose === true ) {
 					foreach ( $results as $url => $result ) {
