@@ -406,7 +406,6 @@ class CheckIfDead {
 			if ( $requestType != "MMS" && $requestType != "RTSP" ) {
 				$options[CURLOPT_ENCODING] = 'gzip,deflate';
 			}
-			$options[CURLOPT_USERAGENT] = $this->userAgent;
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
