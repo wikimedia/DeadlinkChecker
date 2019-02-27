@@ -34,7 +34,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://content.onlinejacc.org/cgi/content/full/41/9/1633', false ],
 			[ 'http://flysunairexpress.com/#about', false ],
 			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
-			[ 'http://list.english-heritage.org.uk/resultsingle.aspx?uid=1284140', false ],
+			//[ 'http://list.english-heritage.org.uk/resultsingle.aspx?uid=1284140', false ],
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
 			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
 			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
@@ -56,7 +56,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
 			[ 'http://worldchiropracticalliance.org/resources/greens/green4.htm', true ],
-			[ 'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html', true ],
+			//[ 'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html', true ],
 			[
 				'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=',
 				true

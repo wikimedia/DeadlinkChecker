@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.7.1' );
+define( 'CHECKIFDEADVERSION', '1.7.2' );
 
 class CheckIfDead {
 
@@ -597,7 +597,7 @@ class CheckIfDead {
 			// Properly encode the host.  It can't be UTF-8.
 			// See https://en.wikipedia.org/wiki/Internationalized_domain_name.
 			if ( function_exists( 'idn_to_ascii' ) ) {
-				$url .= strtolower( idn_to_ascii( $parts['host'] ) );
+				$url .= strtolower( idn_to_ascii( $parts['host'], IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46 ) );
 			} else {
 				$url .= strtolower( $parts['host'] );
 			}
