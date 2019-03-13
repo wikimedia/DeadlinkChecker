@@ -466,7 +466,7 @@ class CheckIfDead {
 			}
 		}
 		// Check for error messages in redirected URL string
-		if ( strpos( $effectiveUrlClean, '404.htm' ) !== false ||
+		if ( strpos( $effectiveUrlClean, '/404.htm' ) !== false ||
 			strpos( $effectiveUrlClean, '/404/' ) !== false ||
 			stripos( $effectiveUrlClean, 'notfound' ) !== false
 		) {
