@@ -136,7 +136,7 @@ class CheckIfDead {
 			self::$socks5Host = $socks5Host;
 			if ( $socks5Port === false ) {
 				// If we are using TOR defaults, check OS to determine which defaults to use.
-				if (substr(php_uname(), 0, 7) == "Windows") {
+				if ( substr( php_uname(), 0, 7 ) == "Windows" ) {
 					self::$socks5Port = 9150;
 				} else {
 					self::$socks5Port = 9050;
@@ -156,7 +156,7 @@ class CheckIfDead {
 				true,
 				true
 			);
-			//Force Tor settings onto the options
+			// Force Tor settings onto the options
 			$options[CURLOPT_PROXY] = self::$socks5Host . ":" . self::$socks5Port;
 			$options[CURLOPT_PROXYTYPE] = CURLPROXY_SOCKS5_HOSTNAME;
 			$options[CURLOPT_HTTPPROXYTUNNEL] = true;
@@ -554,7 +554,9 @@ class CheckIfDead {
 	protected function isOnion( $url ) {
 		$domain = strtolower( parse_url( $url, PHP_URL_HOST ) );
 
-		if( substr( $domain, -6 ) == ".onion" ) return true;
+		if ( substr( $domain, -6 ) == ".onion" ) {
+			return true;
+		}
 	}
 
 	/**
