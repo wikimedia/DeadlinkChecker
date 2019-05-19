@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.7.2' );
+define( 'CHECKIFDEADVERSION', '1.8' );
 
 class CheckIfDead {
 
@@ -30,7 +30,7 @@ class CheckIfDead {
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
-	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36";
+	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36";
 
 	// @codingStandardsIgnoreEnd
 
@@ -89,6 +89,21 @@ class CheckIfDead {
 	protected $verbose = false;
 
 	/**
+	 * The host to connect to when attempting a TOR connection
+	 */
+	protected static $socks5Host = "127.0.0.1";
+
+	/**
+	 * The port to connect to when attempting a TOR connection
+	 */
+	protected static $socks5Port = 9050;
+
+	/**
+	 * This is a flag that indicates whether the OS environment is configured to use TOR
+	 */
+	protected static $torEnabled = null;
+
+	/**
 	 * Set up the class instance
 	 *
 	 * @param int $curlTimeoutNoBody Curl timeout for header-only page requests, in seconds
@@ -102,13 +117,75 @@ class CheckIfDead {
 		$curlTimeoutFull = 60,
 		$userAgent = false,
 		$sequentialTests = true,
-		$verbose = false
+		$verbose = false,
+		$socks5Host = '127.0.0.1',
+		$socks5Port = false
 	) {
 		$this->curlTimeoutNoBody = (int)$curlTimeoutNoBody;
 		$this->curlTimeoutFull = (int)$curlTimeoutFull;
 		$this->customUserAgent = $userAgent;
 		$this->queuedTesting = (bool)$sequentialTests;
 		$this->verbose = (bool)$verbose;
+
+		if ( is_null( self::$torEnabled ) ) {
+			// Check to see if we have an environment that supports TOR
+			if ( $this->verbose ) {
+				echo "Testing for TOR readiness...";
+			}
+
+			self::$socks5Host = $socks5Host;
+			if ( $socks5Port === false ) {
+				// If we are using TOR defaults, check OS to determine which defaults to use.
+				if (substr(php_uname(), 0, 7) == "Windows") {
+					self::$socks5Port = 9150;
+				} else {
+					self::$socks5Port = 9050;
+				}
+			} else {
+				self::$socks5Port = $socks5Port;
+			}
+
+			$testURL = "https://check.torproject.org";
+
+			// Prepare test
+			$ch = curl_init();
+			// Get appropriate curl options
+
+			$options = $this->getCurlOptions(
+				$this->sanitizeURL( $testURL ),
+				true,
+				true
+			);
+			//Force Tor settings onto the options
+			$options[CURLOPT_PROXY] = self::$socks5Host . ":" . self::$socks5Port;
+			$options[CURLOPT_PROXYTYPE] = CURLPROXY_SOCKS5_HOSTNAME;
+			$options[CURLOPT_HTTPPROXYTUNNEL] = true;
+			curl_setopt_array(
+				$ch,
+				$options
+			);
+
+			$data = curl_exec( $ch );
+
+			if ( strpos( $data, "This browser is configured to use Tor." ) !== false ) {
+				self::$torEnabled = true;
+			} else {
+				self::$torEnabled = false;
+			}
+
+			curl_close( $ch );
+
+			if ( $this->verbose ) {
+				if ( self::$torEnabled ) {
+					echo "Ready\n";
+					echo "TOR requests can be made in this environment\n";
+				} else {
+					echo "Not ready\n";
+					echo "TOR requests will be ignored\n";
+				}
+			}
+		}
+
 	}
 
 	/**
@@ -150,6 +227,9 @@ class CheckIfDead {
 			$curl_instances = [];
 			// Array of URLs we want to send in for a full check
 			$fullCheckURLs = [];
+			// Maps the destination URL to the requested URL in case we followed a redirect
+			$fullCheckURLMap = [];
+
 			foreach ( $urls as $id => $url ) {
 				if ( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
 					$curl_instances[$id] = curl_init();
@@ -159,7 +239,7 @@ class CheckIfDead {
 					// Get appropriate curl options
 					curl_setopt_array(
 						$curl_instances[$id],
-						$this->getCurlOptions( $this->sanitizeURL( $url ), false )
+						$this->getCurlOptions( $this->sanitizeURL( $url ), false, $this->isOnion( $url ) )
 					);
 					// Add the instance handle
 					curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
@@ -209,8 +289,13 @@ class CheckIfDead {
 						}
 					}
 					// If we got back a null, we should do a full page request
+					// We need to use the destination URL as CURL does not pass thru
+					// headers when following redirects.  This causes some false positives.
 					if ( is_null( $deadLinks[$url] ) ) {
-						$fullCheckURLs[] = $url;
+						$fullCheckURLs[] = $headers['url'];
+						if ( $url != $headers['url'] ) {
+							$fullCheckURLMap[$url] = $headers['url'];
+						}
 					}
 				} else {
 					$deadLinks[$url] = null;
@@ -240,6 +325,12 @@ class CheckIfDead {
 				}
 				// Merge back results from full requests into our deadlinks array
 				$deadLinks = array_merge( $deadLinks, $results );
+
+				// Use map to change destination URL back to the requested URL
+				foreach ( $fullCheckURLMap as $requested=>$destination ) {
+					$deadLinks[$requested] = $deadLinks[$destination];
+					unset ( $deadLinks[$destination] );
+				}
 			}
 			if ( count( $this->curlQueue ) > 1 ) {
 				sleep( 1 );
@@ -274,7 +365,11 @@ class CheckIfDead {
 			// Get appropriate curl options
 			curl_setopt_array(
 				$curl_instances[$id],
-				$this->getCurlOptions( $this->sanitizeURL( $url, false, true ), true )
+				$this->getCurlOptions(
+					$this->sanitizeURL( $url, false, true ),
+					true,
+					$this->isOnion( $url )
+				)
 			);
 			// Add the instance handle
 			curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
@@ -349,9 +444,10 @@ class CheckIfDead {
 	 *
 	 * @param $url String URL we are testing against
 	 * @param bool $full Is this a request for the full page?
+	 * @param bool $tor Is this request being routed through TOR?
 	 * @return array Options for curl
 	 */
-	protected function getCurlOptions( $url, $full = false ) {
+	protected function getCurlOptions( $url, $full = false, $tor = false ) {
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == "MMS" ) {
 			$url = str_ireplace( "mms://", "rtsp://", $url );
@@ -373,14 +469,14 @@ class CheckIfDead {
 			// Emulate a web browser request but make it accept more than a web browser
 			$header = [
 				// @codingStandardsIgnoreStart Line exceeds 100 characters
-				'Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5',
+				'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
 				// @codingStandardsIgnoreEnd
+				'Upgrade-Insecure-Requests: 1',
 				'Cache-Control: max-age=0',
 				'Connection: keep-alive',
 				'Keep-Alive: 300',
 				'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
 				'Accept-Language: en-us,en;q=0.7,*;q=0.5',
-				'Accept-Encoding: *',
 				'Pragma: '
 			];
 			if ( $this->customUserAgent === false ) {
@@ -404,11 +500,20 @@ class CheckIfDead {
 			$options[CURLOPT_TIMEOUT] = $this->curlTimeoutFull;
 			$options[CURLOPT_HTTPHEADER] = $header;
 			if ( $requestType != "MMS" && $requestType != "RTSP" ) {
-				$options[CURLOPT_ENCODING] = 'gzip,deflate';
+				$options[CURLOPT_ENCODING] = 'gzip, deflate, br';
 			}
 			$options[CURLOPT_USERAGENT] = $this->userAgent;
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
+		}
+
+		if ( $tor && self::$torEnabled ) {
+			$options[CURLOPT_PROXY] = self::$socks5Host . ":" . self::$socks5Port;
+			$options[CURLOPT_PROXYTYPE] = CURLPROXY_SOCKS5_HOSTNAME;
+			$options[CURLOPT_HTTPPROXYTUNNEL] = true;
+
+		} else {
+			$options[CURLOPT_PROXYTYPE] = CURLPROXY_HTTP;
 		}
 
 		return $options;
@@ -421,6 +526,10 @@ class CheckIfDead {
 	 * @return string "FTP", "MMS", "RTSP", "HTTP", or "UNSUPPORTED"
 	 */
 	protected function getRequestType( $url ) {
+		if ( $this->isOnion( $url ) && !self::$torEnabled ) {
+			return "UNSUPPORTED";
+		}
+
 		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 			case "ftp":
 				return "FTP";
@@ -434,6 +543,18 @@ class CheckIfDead {
 			default:
 				return "UNSUPPORTED";
 		}
+	}
+
+	/**
+	 * Check if TOR is needed to access url
+	 *
+	 * @param $url String URL we are checking against
+	 * @return bool True if it's an Onion URL
+	 */
+	protected function isOnion( $url ) {
+		$domain = strtolower( parse_url( $url, PHP_URL_HOST ) );
+
+		if( substr( $domain, -6 ) == ".onion" ) return true;
 	}
 
 	/**
@@ -789,5 +910,14 @@ class CheckIfDead {
 	 */
 	public function getErrors() {
 		return $this->errors;
+	}
+
+	/**
+	 * Returns the status of TOR readiness
+	 *
+	 * @return bool False if the environment doesn't support TOR
+	 */
+	public static function isTorEnabled() {
+		return self::$torEnabled;
 	}
 }
