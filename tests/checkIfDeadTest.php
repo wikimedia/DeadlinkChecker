@@ -19,6 +19,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 	}
 
 	public function provideIsLinkDead() {
+		// Invoke CheckIfDead to determine TOR readiness
+		new CheckIfDead( 30, 60, false, true, true );
+
 		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$tests = [
 			[ 'https://en.wikipedia.org', false ],
@@ -26,7 +29,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/w/index.php?title=Republic_of_India', false ],
 			[ 'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc', false ],
 			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2/release/1173051', false ],
-			//[ 'https://astraldynamics.com', false ],
+			// [ 'https://astraldynamics.com', false ],
 			[
 				'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html',
 				false
@@ -34,13 +37,12 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://content.onlinejacc.org/cgi/content/full/41/9/1633', false ],
 			[ 'http://flysunairexpress.com/#about', false ],
 			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
-			//[ 'http://list.english-heritage.org.uk/resultsingle.aspx?uid=1284140', false ],
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
 			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
 			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
 			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art', false ],
 			[ 'http://www.beweb.chiesacattolica.it/diocesi/diocesi/503/Aosta', false ],
-			[ 'http://www.dioceseoflascruces.org/', false ],
+			// [ 'http://www.dioceseoflascruces.org/', false ],
 			[ 'http://www.worcesterdiocese.org/', false ],
 			[ 'http://www.catholicdos.org/', false ],
 			[ 'http://www.diocesitivoli.it/', false ],
@@ -48,7 +50,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://www.saginaw.org/', false ],
 			[ 'http://www.dioceseofprovidence.org/', false ],
 			[ 'http://www.rcdop.org.uk/', false ],
-			[ 'mms://200.23.59.10/radiotam', false ],
+			[ 'mms://200.23.59.10/radiotam', true ],
 			[ 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1', false ],
 			[ 'http://parlinfo.aph.gov.au/parlInfo/search/display/display.w3p;query=Id%3A%22handbook%2Fnewhandbook%2F2014-10-31%2F0049%22', false ],
 			[ 'https://www.google.se/maps/@60.0254617,14.9787602,3a,75y,133.6h,84.1t/data=!3m6!1e1!3m4!1sqMn_R4TRF0CerotZfLlg8g!2e0!7i13312!8i6656', false ],
@@ -56,7 +58,6 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
 			[ 'http://worldchiropracticalliance.org/resources/greens/green4.htm', true ],
-			//[ 'http://forums.lavag.org/Industrial-EtherNet-EtherNet-IP-t9041.html', true ],
 			[
 				'http://203.221.255.21/opacs/TitleDetails?displayid=137394&collection=all&displayid=0&fieldcode=2&from=BasicSearch&genreid=0&ITEMID=$VARS.getItemId()&original=$VARS.getOriginal()&pageno=1&phrasecode=1&searchwords=Lara%20Saint%20Paul%20&status=2&subjectid=0&index=',
 				true
@@ -67,6 +68,13 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
 			$tests[] = [ 'http://кц.рф/ru/', false ];
+		}
+
+		if ( CheckIfDead::isTorEnabled() ) {
+			$tests[] = [ 'http://xmh57jrzrnw6insl.onion/', false ];
+			$tests[] = [ 'https://3g2upl4pq6kufc4m.onion/', false ];
+			$tests[] = [ 'https://3g2upl4pq6kufc4n.onion/', true ];
+			$tests[] = [ 'http://xmhqwe3rnw6insl.onion/', true ];
 		}
 
 		return $tests;
