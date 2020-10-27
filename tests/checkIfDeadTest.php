@@ -39,7 +39,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
 			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
-			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
+			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', true ],
 			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art', false ],
 			[ 'http://www.beweb.chiesacattolica.it/diocesi/diocesi/503/Aosta', false ],
 			// [ 'http://www.dioceseoflascruces.org/', false ],
