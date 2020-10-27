@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8' );
+define( 'CHECKIFDEADVERSION', '1.8.1' );
 
 class CheckIfDead {
 
@@ -30,7 +30,7 @@ class CheckIfDead {
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
-	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36";
+	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36";
 
 	// @codingStandardsIgnoreEnd
 
@@ -77,6 +77,11 @@ class CheckIfDead {
 	 * dead, indexed by URL
 	 */
 	protected $errors = [];
+
+	/**
+	 * Contains query details of URLs being tested
+	 */
+	protected $details = [];
 
 	/**
 	 * Whether or not to turn queuing on or off
@@ -264,7 +269,7 @@ class CheckIfDead {
 			// Let's process our curl results and extract the useful information
 			foreach ( $urls as $id => $url ) {
 				if ( isset( $curl_instances[$id] ) ) {
-					$headers = curl_getinfo( $curl_instances[$id] );
+					$this->details[$url] = $headers = curl_getinfo( $curl_instances[$id] );
 					$error = curl_errno( $curl_instances[$id] );
 					$errormsg = curl_error( $curl_instances[$id] );
 					$curlInfo = [
@@ -329,7 +334,12 @@ class CheckIfDead {
 				// Use map to change destination URL back to the requested URL
 				foreach ( $fullCheckURLMap as $requested=>$destination ) {
 					$deadLinks[$requested] = $deadLinks[$destination];
-					unset ( $deadLinks[$destination] );
+					$this->details[$requested] = $this->details[$destination];
+					if ( isset( $this->errors[$destination] ) ) {
+						$this->errors[$requested] = $this->errors[$destination];
+						unset( $this->errors[$destination] );
+					}
+					unset ( $deadLinks[$destination], $this->details[$destination] );
 				}
 			}
 			if ( count( $this->curlQueue ) > 1 ) {
@@ -390,7 +400,7 @@ class CheckIfDead {
 		}
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
-			$headers = curl_getinfo( $curl_instances[$id] );
+			$this->details[$url] = $headers = curl_getinfo( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$errormsg = curl_error( $curl_instances[$id] );
 			$curlInfo = [
@@ -469,15 +479,20 @@ class CheckIfDead {
 			// Emulate a web browser request but make it accept more than a web browser
 			$header = [
 				// @codingStandardsIgnoreStart Line exceeds 100 characters
-				'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+				'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
 				// @codingStandardsIgnoreEnd
+				'Accept-Encoding: gzip, deflate, br',
 				'Upgrade-Insecure-Requests: 1',
 				'Cache-Control: max-age=0',
 				'Connection: keep-alive',
 				'Keep-Alive: 300',
 				'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-				'Accept-Language: en-us,en;q=0.7,*;q=0.5',
-				'Pragma: '
+				'Accept-Language: en-US,en;q=0.9,de;q=0.8',
+				'Pragma: ',
+				'sec-fetch-dest: document',
+				'sec-fetch-mode: navigate',
+				'sec-fetch-site: none',
+				'sec-fetch-user: ?1'
 			];
 			if ( $this->customUserAgent === false ) {
 				$options[CURLOPT_USERAGENT] = $this->userAgent;
@@ -556,6 +571,8 @@ class CheckIfDead {
 
 		if ( substr( $domain, -6 ) == ".onion" ) {
 			return true;
+		} else {
+			return false;
 		}
 	}
 
@@ -665,7 +682,7 @@ class CheckIfDead {
 		$roots[] = $pieces['host'];
 		$roots[] = $pieces['host'] . '/';
 		$domain = isset( $pieces['host'] ) ? $pieces['host'] : '';
-		if ( preg_match( '/(?P<domain>[a-z0-9][a-z0-9\-]{1,63}\.[a-z\.]{2,6})$/i', $domain, $regs ) ) {
+		if ( preg_match( '/(?P<domain>[a-z0-9][a-z0-9\-]{1,63}\.[a-z.]{2,6})$/i', $domain, $regs ) ) {
 			$roots[] = $regs['domain'];
 			$roots[] = $regs['domain'] . '/';
 		}
@@ -839,7 +856,7 @@ class CheckIfDead {
 		// This is just idiot proofing.
 		// See if the URL is fully encoded by checking if the :// is encoded.
 		// This prevents URLs where double encoded values aren't mistakenly decoded breaking the URL.
-		if ( preg_match( '/^([a-z0-9\+\-\.]*)(?:%3A%2F%2F|%3A\/\/|:%2F%2F)/i', $url ) ) {
+		if ( preg_match( '/^([a-z0-9+\-.]*)(?:%3A%2F%2F|%3A\/\/|:%2F%2F)/i', $url ) ) {
 			// First let's break the fragment out to prevent accidentally mistaking a decoded %23 as a #
 			$fragment = parse_url( $url, PHP_URL_FRAGMENT );
 			if ( !is_null( $fragment ) ) {
@@ -856,7 +873,7 @@ class CheckIfDead {
 		}
 		// Sometimes the scheme is followed by a single slash instead of a double.
 		// Web browsers and archives support this, so we should too.
-		if ( preg_match( '/^([a-z0-9\+\-\.]*:)?\/([^\/].+)/i', $url, $match ) ) {
+		if ( preg_match( '/^([a-z0-9+\-.]*:)?\/([^\/].+)/i', $url, $match ) ) {
 			$url = $match[1] . "//" . $match[2];
 		}
 		// Sometimes protocol relative URLs are not formatted correctly
@@ -867,7 +884,7 @@ class CheckIfDead {
 		}
 		// If we're missing the scheme and double slashes entirely, assume http.
 		// The parse_url function fails without this
-		if ( !preg_match( '/(?:[a-z0-9\+\-\.]*:)?\/\//i', $url ) ) {
+		if ( !preg_match( '/(?:[a-z0-9+\-.]*:)?\/\//i', $url ) ) {
 			$url = "http://" . $url;
 		}
 		$encodedUrl = preg_replace_callback(
@@ -912,6 +929,15 @@ class CheckIfDead {
 	 */
 	public function getErrors() {
 		return $this->errors;
+	}
+
+	/**
+	 * Returns all of the data collected during the curl request.
+	 *
+	 * @return array All curl statistics gathered during the request.
+	 */
+	public function getRequestDetails() {
+		return $this->details;
 	}
 
 	/**
