@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.1' );
+define( 'CHECKIFDEADVERSION', '1.8.2' );
 
 class CheckIfDead {
 
@@ -82,6 +82,11 @@ class CheckIfDead {
 	 * Contains query details of URLs being tested
 	 */
 	protected $details = [];
+
+	/**
+	 * Contains query details of URLs being tested
+	 */
+	protected $snapshots = [];
 
 	/**
 	 * Whether or not to turn queuing on or off
@@ -335,11 +340,12 @@ class CheckIfDead {
 				foreach ( $fullCheckURLMap as $requested=>$destination ) {
 					$deadLinks[$requested] = $deadLinks[$destination];
 					$this->details[$requested] = $this->details[$destination];
+					$this->snapshots[$requested] = $this->snapshots[$destination];
 					if ( isset( $this->errors[$destination] ) ) {
 						$this->errors[$requested] = $this->errors[$destination];
 						unset( $this->errors[$destination] );
 					}
-					unset ( $deadLinks[$destination], $this->details[$destination] );
+					unset ( $deadLinks[$destination], $this->details[$destination], $this->snapshots[$destination] );
 				}
 			}
 			if ( count( $this->curlQueue ) > 1 ) {
@@ -401,6 +407,7 @@ class CheckIfDead {
 		// Let's process our curl results and extract the useful information
 		foreach ( $urls as $id => $url ) {
 			$this->details[$url] = $headers = curl_getinfo( $curl_instances[$id] );
+			$this->snapshots[$url] = curl_multi_getcontent( $curl_instances[$id] );
 			$error = curl_errno( $curl_instances[$id] );
 			$errormsg = curl_error( $curl_instances[$id] );
 			$curlInfo = [
@@ -938,6 +945,15 @@ class CheckIfDead {
 	 */
 	public function getRequestDetails() {
 		return $this->details;
+	}
+
+	/**
+	 * Returns all of the snapshots collected during the curl request.
+	 *
+	 * @return array All page snapshots gathered during the request.
+	 */
+	public function getRequestSnapshots() {
+		return $this->snapshots;
 	}
 
 	/**
