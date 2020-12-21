@@ -652,6 +652,8 @@ class CheckIfDead {
 				$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
 				if ( $curlInfo['curl_error'] != 0 ) {
 					$this->errors[$curlInfo['rawurl']] .= " - Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
+				} else {
+					$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['total_time_us']} us";
 				}
 
 				return true;
