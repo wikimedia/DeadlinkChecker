@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.2' );
+define( 'CHECKIFDEADVERSION', '1.8.3' );
 
 class CheckIfDead {
 
@@ -650,6 +650,9 @@ class CheckIfDead {
 		if ( $httpCode === 0 ) {
 			if ( $full ) {
 				$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
+				if ( $curlInfo['curl_error'] != 0 ) {
+					$this->errors[$curlInfo['rawurl']] .= " - Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
+				}
 
 				return true;
 			} else {
