@@ -667,13 +667,10 @@ class CheckIfDead {
 		if ( $httpCode === 0 ) {
 			if ( $full ) {
 				$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
-				if ( $curlInfo['curl_error'] != 0 ) {
-					$this->errors[$curlInfo['rawurl']] .= " - Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
-				} else {
-					$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['exec_time']} us";
-				}
+				$this->errors[$curlInfo['rawurl']] .= " - Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
+				$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['exec_time']} us";
 
-				if( $curlInfo['exec_time'] >= 750 ) {
+				if( $curlInfo['exec_time'] >= 1000 ) {
 					return true;
 				} else {
 					$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER - POTENTIAL FALSE POSITIVE";
