@@ -283,7 +283,8 @@ class CheckIfDead {
 						'curl_error' => $error,
 						'curl_error_msg' => $errormsg,
 						'url' => $this->sanitizeURL( $url ),
-						'rawurl' => $url
+						'rawurl' => $url,
+						'exec_time' => $headers['total_time_us']
 					];
 					// Remove each of the individual handles
 					curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
@@ -653,7 +654,7 @@ class CheckIfDead {
 				if ( $curlInfo['curl_error'] != 0 ) {
 					$this->errors[$curlInfo['rawurl']] .= " - Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
 				} else {
-					$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['total_time_us']} us";
+					$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['exec_time']} us";
 				}
 
 				return true;
