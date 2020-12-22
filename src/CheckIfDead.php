@@ -658,7 +658,12 @@ class CheckIfDead {
 					$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['exec_time']} us";
 				}
 
-				return true;
+				if( $curlInfo['exec_time'] >= 750 ) {
+					return true;
+				} else {
+					$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER - POTENTIAL FALSE POSITIVE";
+					return null;
+				}
 			} else {
 				// Some servers don't support NOBODY requests, so if redirect to a 404 page
 				// is returned, we'll check the URL again with a full page request.
