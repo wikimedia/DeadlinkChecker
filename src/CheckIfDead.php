@@ -283,9 +283,15 @@ class CheckIfDead {
 						'curl_error' => $error,
 						'curl_error_msg' => $errormsg,
 						'url' => $this->sanitizeURL( $url ),
-						'rawurl' => $url,
-						'exec_time' => $headers['total_time_us']
+						'rawurl' => $url
 					];
+					if ( isset( $headers['total_time_us'] ) ) {
+						$curlInfo['exec_time'] = $headers['total_time_us'];
+					} elseif ( isset( $headers['total_time'] ) ) {
+						$curlInfo['exec_time'] = $headers['total_time'] * 1000000;
+					} else {
+						$curlInfo['exec_time'] = 1000000;
+					}
 					// Remove each of the individual handles
 					curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
 					$curl_instances[$id] = null;
@@ -346,7 +352,10 @@ class CheckIfDead {
 						$this->errors[$requested] = $this->errors[$destination];
 						unset( $this->errors[$destination] );
 					}
-					unset ( $deadLinks[$destination], $this->details[$destination], $this->snapshots[$destination] );
+					unset (
+						$deadLinks[$destination],
+						$this->details[$destination],
+						$this->snapshots[$destination] );
 				}
 			}
 			if ( count( $this->curlQueue ) > 1 ) {
@@ -416,10 +425,16 @@ class CheckIfDead {
 				'effective_url' => $headers['url'],
 				'curl_error' => $error,
 				'curl_error_msg' => $errormsg,
-				'url' => $this->sanitizeURL( $url, false, true ),
-				'rawurl' => $url,
-				'exec_time' => $headers['total_time_us']
+				'url' => $this->sanitizeURL( $url ),
+				'rawurl' => $url
 			];
+			if ( isset( $headers['total_time_us'] ) ) {
+				$curlInfo['exec_time'] = $headers['total_time_us'];
+			} elseif ( isset( $headers['total_time'] ) ) {
+				$curlInfo['exec_time'] = $headers['total_time'] * 1000000;
+			} else {
+				$curlInfo['exec_time'] = 1000000;
+			}
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
 			$deadlinks[$url] = $this->processCurlResults( $curlInfo, true );
