@@ -417,7 +417,8 @@ class CheckIfDead {
 				'curl_error' => $error,
 				'curl_error_msg' => $errormsg,
 				'url' => $this->sanitizeURL( $url, false, true ),
-				'rawurl' => $url
+				'rawurl' => $url,
+				'exec_time' => $headers['total_time_us']
 			];
 			// Remove each of the individual handles
 			curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
