@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.3' );
+define( 'CHECKIFDEADVERSION', '1.8.3.1' );
 
 class CheckIfDead {
 
@@ -222,6 +222,8 @@ class CheckIfDead {
 	 */
 	public function areLinksDead( $urls ) {
 		// Create multiple curl handle
+		$this->errors = [];
+		$this->details = [];
 		$multicurl_resource = curl_multi_init();
 		if ( $multicurl_resource === false ) {
 			return null;
