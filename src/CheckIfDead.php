@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.3.2' );
+define( 'CHECKIFDEADVERSION', '1.8.3.3' );
 
 class CheckIfDead {
 
@@ -243,9 +243,10 @@ class CheckIfDead {
 			$fullCheckURLMap = [];
 
 			foreach ( $urls as $id => $url ) {
-				if ( $this->getRequestType( $this->sanitizeURL( $url ) ) != "UNSUPPORTED" ) {
+				$requestType = $this->getRequestType( $this->sanitizeURL( $url ) );
+				if( !in_array( $requestType, [ "UNSUPPORTED", "BAD URL" ] ) ) {
 					$curl_instances[$id] = curl_init();
-					if ( $curl_instances[$id] === false ) {
+					if( $curl_instances[$id] === false ) {
 						return null;
 					}
 					// Get appropriate curl options
@@ -255,8 +256,15 @@ class CheckIfDead {
 					);
 					// Add the instance handle
 					curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
-				} elseif ( $this->verbose === true ) {
-					echo "$url is not supported!\n";
+				} elseif( $this->verbose === true ) {
+					if( $requestType == "UNSUPPORTED" ) echo "$url is not supported!\n";
+					else echo "$url is malformed!\n";
+				}
+
+				if( $requestType == "BAD URL" ) {
+					$deadLinks[$url] = true;
+					$this->errors[$url] = "MALFORMED URL";
+					$this->details[$url] = null;
 				}
 			}
 			// Let's do the curl operations
@@ -317,8 +325,8 @@ class CheckIfDead {
 						}
 					}
 				} else {
-					$deadLinks[$url] = null;
-					if ( $this->verbose === true ) {
+					if( !isset( $deadLinks[$url] ) ) $deadLinks[$url] = null;
+					if( $this->verbose === true ) {
 						echo "Something went wrong with $url!\n";
 					}
 				}
@@ -460,16 +468,18 @@ class CheckIfDead {
 			return;
 		}
 		foreach ( $urls as $url ) {
-			$domain = $this->parseURL( $url )['host'];
+			$parsedParts = $this->parseURL( $url );
+			if( $parsedParts === false ) $parsedParts['host'] = "empty";
+			$domain = $parsedParts['host'];
 			$queuedUrl = false;
 			$queueIndex = -1;
-			foreach ( $this->curlQueue as $queueIndex => $urlList ) {
-				if ( $queuedUrl === false && !isset( $urlList[$domain] ) ) {
+			foreach( $this->curlQueue as $queueIndex => $urlList ) {
+				if( $queuedUrl === false && !isset( $urlList[$domain] ) ) {
 					$this->curlQueue[$queueIndex][$domain] = $url;
 					$queuedUrl = true;
 				}
 			}
-			if ( $queuedUrl === false ) {
+			if( $queuedUrl === false ) {
 				$this->curlQueue[++$queueIndex][$domain] = $url;
 			}
 		}
@@ -571,7 +581,7 @@ class CheckIfDead {
 			return "UNSUPPORTED";
 		}
 
-		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
+		switch( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 			case "ftp":
 				return "FTP";
 			case "mms":
@@ -581,6 +591,8 @@ class CheckIfDead {
 			case "http":
 			case "https":
 				return "HTTP";
+			case "":
+				return "BAD URL";
 			default:
 				return "UNSUPPORTED";
 		}
@@ -746,11 +758,13 @@ class CheckIfDead {
 		// Some rare URLs don't like it when %20 is passed in the query and require the +.
 		// %20 is the most common usage to represent a whitespace in the query.
 		// So convert them to unique values that will survive the encoding/decoding process.
-		if ( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
+		if( $parts === false ) return false;
+
+		if( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
 			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
 		}
 		// In case the protocol is missing, assume it goes to HTTPS
-		if ( !isset( $parts['scheme'] ) ) {
+		if( !isset( $parts['scheme'] ) ) {
 			$url = "https";
 		} else {
 			$url = strtolower( $parts['scheme'] );
