@@ -38,8 +38,11 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://flysunairexpress.com/#about', false ],
 			[ 'http://www.palestineremembered.com/download/VillageStatistics/Table%20I/Haifa/Page-047.jpg', false ],
 			[ 'http://archives.lse.ac.uk/TreeBrowse.aspx?src=CalmView.Catalog&field=RefNo&key=RICHARDS', false ],
-			[ 'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit', false ],
-			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', true ],
+			[
+				'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit',
+				false
+			],
+			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
 			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art', false ],
 			[ 'http://www.beweb.chiesacattolica.it/diocesi/diocesi/503/Aosta', false ],
 			// [ 'http://www.dioceseoflascruces.org/', false ],
@@ -53,7 +56,10 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'mms://200.23.59.10/radiotam', true ],
 			[ 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1', false ],
 			[ 'http://parlinfo.aph.gov.au/parlInfo/search/display/display.w3p;query=Id%3A%22handbook%2Fnewhandbook%2F2014-10-31%2F0049%22', false ],
-			[ 'https://www.google.se/maps/@60.0254617,14.9787602,3a,75y,133.6h,84.1t/data=!3m6!1e1!3m4!1sqMn_R4TRF0CerotZfLlg8g!2e0!7i13312!8i6656', false ],
+			[
+				'https://www.google.se/maps/@60.0254617,14.9787602,3a,75y,133.6h,84.1t/data=!3m6!1e1!3m4!1sqMn_R4TRF0CerotZfLlg8g!2e0!7i13312!8i6656',
+				false
+			],
 
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
@@ -63,7 +69,11 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				true
 			],
 			[ 'mms://209.0.211.10/live', true ],
-			[ 'chrome://examplefunction', null ]
+			[ 'chrome://examplefunction', null ],
+			[
+				'https:///http%3A//www.stat.kz/p_perepis/DocLib1/%D0%9F%D0%BE%D1%80%D1%82%D1%80%D0%B5%D1%82%20%D0%B3%D0%BE%D1%80%D0%BE%D0%B4%D0%B0%20%D1%80%D1%83%D1%81.pdf',
+				true
+			]
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
