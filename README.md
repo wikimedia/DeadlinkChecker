@@ -2,6 +2,8 @@
 
 Maintainer: [Cyberpower678](https://github.com/Cyberpower678)
 
+REQUIRES: PHP 7.3 or higher
+
 This is a PHP library for detecting whether URLs on the internet are alive or dead via cURL. It includes the following features:
 * Supports HTTP, HTTPS, FTP, MMS, and RTSP URLs
 * Supports TOR
