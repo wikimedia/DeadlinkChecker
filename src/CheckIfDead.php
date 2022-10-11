@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.3.3' );
+define( 'CHECKIFDEADVERSION', '1.8.3.4' );
 
 class CheckIfDead {
 
@@ -30,7 +30,7 @@ class CheckIfDead {
 	 * UserAgent for the device/browser we are pretending to be
 	 */
 	// @codingStandardsIgnoreStart Line exceeds 100 characters
-	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.111 Safari/537.36";
+	protected $userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36";
 
 	// @codingStandardsIgnoreEnd
 
@@ -136,13 +136,11 @@ class CheckIfDead {
 		$this->customUserAgent = $userAgent;
 		$this->queuedTesting = (bool)$sequentialTests;
 		$this->verbose = (bool)$verbose;
-
 		if ( is_null( self::$torEnabled ) ) {
 			// Check to see if we have an environment that supports TOR
 			if ( $this->verbose ) {
 				echo "Testing for TOR readiness...";
 			}
-
 			self::$socks5Host = $socks5Host;
 			if ( $socks5Port === false ) {
 				// If we are using TOR defaults, check OS to determine which defaults to use.
@@ -154,13 +152,10 @@ class CheckIfDead {
 			} else {
 				self::$socks5Port = $socks5Port;
 			}
-
 			$testURL = "https://check.torproject.org";
-
 			// Prepare test
 			$ch = curl_init();
 			// Get appropriate curl options
-
 			$options = $this->getCurlOptions(
 				$this->sanitizeURL( $testURL ),
 				true,
@@ -174,17 +169,13 @@ class CheckIfDead {
 				$ch,
 				$options
 			);
-
 			$data = curl_exec( $ch );
-
 			if ( strpos( $data, "This browser is configured to use Tor." ) !== false ) {
 				self::$torEnabled = true;
 			} else {
 				self::$torEnabled = false;
 			}
-
 			curl_close( $ch );
-
 			if ( $this->verbose ) {
 				if ( self::$torEnabled ) {
 					echo "Ready\n";
@@ -195,7 +186,6 @@ class CheckIfDead {
 				}
 			}
 		}
-
 	}
 
 	/**
@@ -241,12 +231,13 @@ class CheckIfDead {
 			$fullCheckURLs = [];
 			// Maps the destination URL to the requested URL in case we followed a redirect
 			$fullCheckURLMap = [];
-
+			// Set HTTP version for full check URLs
+			$httpVersions = [];
 			foreach ( $urls as $id => $url ) {
 				$requestType = $this->getRequestType( $this->sanitizeURL( $url ) );
-				if( !in_array( $requestType, [ "UNSUPPORTED", "BAD URL" ] ) ) {
+				if ( !in_array( $requestType, [ "UNSUPPORTED", "BAD URL" ] ) ) {
 					$curl_instances[$id] = curl_init();
-					if( $curl_instances[$id] === false ) {
+					if ( $curl_instances[$id] === false ) {
 						return null;
 					}
 					// Get appropriate curl options
@@ -256,12 +247,11 @@ class CheckIfDead {
 					);
 					// Add the instance handle
 					curl_multi_add_handle( $multicurl_resource, $curl_instances[$id] );
-				} elseif( $this->verbose === true ) {
-					if( $requestType == "UNSUPPORTED" ) echo "$url is not supported!\n";
+				} elseif ( $this->verbose === true ) {
+					if ( $requestType == "UNSUPPORTED" ) echo "$url is not supported!\n";
 					else echo "$url is malformed!\n";
 				}
-
-				if( $requestType == "BAD URL" ) {
+				if ( $requestType == "BAD URL" ) {
 					$deadLinks[$url] = true;
 					$this->errors[$url] = "MALFORMED URL";
 					$this->details[$url] = null;
@@ -293,7 +283,8 @@ class CheckIfDead {
 						'curl_error' => $error,
 						'curl_error_msg' => $errormsg,
 						'url' => $this->sanitizeURL( $url ),
-						'rawurl' => $url
+						'rawurl' => $url,
+						'http_version' => curl_getinfo( $curl_instances[$id], CURLINFO_HTTP_VERSION )
 					];
 					if ( isset( $headers['total_time_us'] ) ) {
 						$curlInfo['exec_time'] = $headers['total_time_us'];
@@ -306,7 +297,7 @@ class CheckIfDead {
 					curl_multi_remove_handle( $multicurl_resource, $curl_instances[$id] );
 					$curl_instances[$id] = null;
 					// Deduce whether the site is dead or alive
-					$deadLinks[$url] = $this->processCurlResults( $curlInfo, false );
+					$deadLinks[$url] = $this->processCurlResults( $curlInfo );
 					if ( $this->verbose === true ) {
 						if ( $deadLinks[$url] === true ) {
 							echo "$url is DEAD!\n";
@@ -316,17 +307,16 @@ class CheckIfDead {
 						}
 					}
 					// If we got back a null, we should do a full page request
-					// We need to use the destination URL as CURL does not pass thru
-					// headers when following redirects.  This causes some false positives.
 					if ( is_null( $deadLinks[$url] ) ) {
-						$fullCheckURLs[] = $headers['url'];
-						if ( $url != $headers['url'] ) {
-							$fullCheckURLMap[$url] = $headers['url'];
+						$fullCheckURLs[] = $curlInfo['url'];
+						$httpVersions[] = $curlInfo['http_version'];
+						if ( $url != $curlInfo['url'] ) {
+							$fullCheckURLMap[$url] = $curlInfo['url'];
 						}
 					}
 				} else {
-					if( !isset( $deadLinks[$url] ) ) $deadLinks[$url] = null;
-					if( $this->verbose === true ) {
+					if ( !isset( $deadLinks[$url] ) ) $deadLinks[$url] = null;
+					if ( $this->verbose === true ) {
 						echo "Something went wrong with $url!\n";
 					}
 				}
@@ -339,7 +329,7 @@ class CheckIfDead {
 						echo "\t$url\n";
 					}
 				}
-				$results = $this->performFullRequest( $fullCheckURLs );
+				$results = $this->performFullRequest( $fullCheckURLs, $httpVersions );
 				if ( $this->verbose === true ) {
 					foreach ( $results as $url => $result ) {
 						if ( $result === true ) {
@@ -352,9 +342,8 @@ class CheckIfDead {
 				}
 				// Merge back results from full requests into our deadlinks array
 				$deadLinks = array_merge( $deadLinks, $results );
-
 				// Use map to change destination URL back to the requested URL
-				foreach ( $fullCheckURLMap as $requested=>$destination ) {
+				foreach ( $fullCheckURLMap as $requested => $destination ) {
 					$deadLinks[$requested] = $deadLinks[$destination];
 					$this->details[$requested] = $this->details[$destination];
 					$this->snapshots[$requested] = $this->snapshots[$destination];
@@ -385,7 +374,7 @@ class CheckIfDead {
 	 * @return array with params 'error':curl error number and
 	 *   'result':true(dead)/false(alive) for each element
 	 */
-	protected function performFullRequest( $urls ) {
+	protected function performFullRequest( $urls, $httpVersions ) {
 		// Create multiple curl handle
 		$multicurl_resource = curl_multi_init();
 		if ( $multicurl_resource === false ) {
@@ -404,7 +393,7 @@ class CheckIfDead {
 				$this->getCurlOptions(
 					$this->sanitizeURL( $url, false, true ),
 					true,
-					$this->isOnion( $url )
+					$this->isOnion( $url ), $httpVersions[$id]
 				)
 			);
 			// Add the instance handle
@@ -436,7 +425,8 @@ class CheckIfDead {
 				'curl_error' => $error,
 				'curl_error_msg' => $errormsg,
 				'url' => $this->sanitizeURL( $url ),
-				'rawurl' => $url
+				'rawurl' => $url,
+				'http_version' => curl_getinfo( $curl_instances[$id], CURLINFO_HTTP_VERSION )
 			];
 			if ( isset( $headers['total_time_us'] ) ) {
 				$curlInfo['exec_time'] = $headers['total_time_us'];
@@ -469,17 +459,17 @@ class CheckIfDead {
 		}
 		foreach ( $urls as $url ) {
 			$parsedParts = $this->parseURL( $url );
-			if( $parsedParts === false ) $parsedParts['host'] = "empty";
+			if ( $parsedParts === false ) $parsedParts['host'] = "empty";
 			$domain = $parsedParts['host'];
 			$queuedUrl = false;
 			$queueIndex = -1;
-			foreach( $this->curlQueue as $queueIndex => $urlList ) {
-				if( $queuedUrl === false && !isset( $urlList[$domain] ) ) {
+			foreach ( $this->curlQueue as $queueIndex => $urlList ) {
+				if ( $queuedUrl === false && !isset( $urlList[$domain] ) ) {
 					$this->curlQueue[$queueIndex][$domain] = $url;
 					$queuedUrl = true;
 				}
 			}
-			if( $queuedUrl === false ) {
+			if ( $queuedUrl === false ) {
 				$this->curlQueue[++$queueIndex][$domain] = $url;
 			}
 		}
@@ -493,7 +483,7 @@ class CheckIfDead {
 	 * @param bool $tor Is this request being routed through TOR?
 	 * @return array Options for curl
 	 */
-	protected function getCurlOptions( $url, $full = false, $tor = false ) {
+	protected function getCurlOptions( $url, $full = false, $tor = false, $httpVersion = CURL_HTTP_VERSION_NONE ) {
 		$requestType = $this->getRequestType( $url );
 		if ( $requestType == "MMS" ) {
 			$url = str_ireplace( "mms://", "rtsp://", $url );
@@ -506,30 +496,57 @@ class CheckIfDead {
 			CURLOPT_FOLLOWLOCATION => true,
 			CURLOPT_TIMEOUT => $this->curlTimeoutNoBody,
 			CURLOPT_SSL_VERIFYPEER => false,
-			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat"
+			CURLOPT_COOKIEJAR => sys_get_temp_dir() . "checkifdead.cookies.dat",
+			CURLOPT_HTTP_VERSION => $httpVersion,
+			CURLINFO_HEADER_OUT => 1
 		];
 		if ( $requestType == "RTSP" || $requestType == "MMS" ) {
 			$header = [];
 			$options[CURLOPT_USERAGENT] = $this->mediaAgent;
-		} else {
+		} elseif ( $requestType != "FTP" ) {
+			// Properly handle HTTP version
 			// Emulate a web browser request but make it accept more than a web browser
-			$header = [
-				// @codingStandardsIgnoreStart Line exceeds 100 characters
-				'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
-				// @codingStandardsIgnoreEnd
-				'Accept-Encoding: gzip, deflate, br',
-				'Upgrade-Insecure-Requests: 1',
-				'Cache-Control: max-age=0',
-				'Connection: keep-alive',
-				'Keep-Alive: 300',
-				'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
-				'Accept-Language: en-US,en;q=0.9,de;q=0.8',
-				'Pragma: ',
-				'sec-fetch-dest: document',
-				'sec-fetch-mode: navigate',
-				'sec-fetch-site: none',
-				'sec-fetch-user: ?1'
-			];
+			if ( in_array( $httpVersion, [ CURL_HTTP_VERSION_1_0, CURL_HTTP_VERSION_1_1, CURL_HTTP_VERSION_NONE ] ) ) {
+				$header = [
+					// @codingStandardsIgnoreStart Line exceeds 100 characters
+					'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+					// @codingStandardsIgnoreEnd
+					'Upgrade-Insecure-Requests: 1',
+					'Cache-Control: max-age=0',
+					'Connection: keep-alive',
+					'Keep-Alive: 300',
+					'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+					'Accept-Language: en-US,en;q=0.9,de;q=0.8',
+					'Pragma: '
+				];
+			} elseif ( in_array( $httpVersion, [ CURL_HTTP_VERSION_2, CURL_HTTP_VERSION_2_0, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE, CURL_HTTP_VERSION_2TLS ] ) ) {
+				$parsedURL = $this->parseURL( $url );
+				$header = [
+					//'authority: ' . $parsedURL['host'],
+					//':method: get',
+					//':path: ' . $parsedURL['path'],
+					//':scheme: ' . strtolower( $parsedURL['scheme'] ),
+					// @codingStandardsIgnoreStart Line exceeds 100 characters
+					'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+					// @codingStandardsIgnoreEnd
+					'upgrade-insecure-requests: 1',
+					'cache-control: max-age=0',
+					'connection: keep-alive',
+					'keep-alive: 300',
+					'accept-charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7',
+					'accept-language: en-US,en;q=0.9,de;q=0.8',
+					'dnt: 1'
+				];
+				if ( $requestType == "HTTPS" ) {
+					$header[] = 'sec-ch-ua: "Google Chrome";v="105", "Not)A;Brand";v="8", "Chromium";v="105"';
+					$header[] = 'sec-ch-ua-mobile: ?0';
+					$header[] = 'sec-ch-ua-platform: "' . $this->getRequestPlatform() . '"';
+					$header[] = 'sec-fetch-dest: document';
+					$header[] = 'sec-fetch-mode: navigate';
+					$header[] = 'sec-fetch-site: none';
+					$header[] = 'sec-fetch-user: ?1';
+				}
+			}
 			if ( $this->customUserAgent === false ) {
 				$options[CURLOPT_USERAGENT] = $this->userAgent;
 			} else {
@@ -545,8 +562,7 @@ class CheckIfDead {
 				// Set CURLOPT_USERPWD for anonymous FTP login
 				$options[CURLOPT_USERPWD] = "anonymous:anonymous@domain.com";
 			}
-		}
-		if ( $full ) {
+		} elseif ( $full ) {
 			// Extend timeout since we are requesting the full body
 			$options[CURLOPT_TIMEOUT] = $this->curlTimeoutFull;
 			$options[CURLOPT_HTTPHEADER] = $header;
@@ -557,17 +573,68 @@ class CheckIfDead {
 		} else {
 			$options[CURLOPT_NOBODY] = 1;
 		}
-
 		if ( $tor && self::$torEnabled ) {
 			$options[CURLOPT_PROXY] = self::$socks5Host . ":" . self::$socks5Port;
 			$options[CURLOPT_PROXYTYPE] = CURLPROXY_SOCKS5_HOSTNAME;
 			$options[CURLOPT_HTTPPROXYTUNNEL] = true;
-
 		} else {
 			$options[CURLOPT_PROXYTYPE] = CURLPROXY_HTTP;
 		}
 
 		return $options;
+	}
+
+	/**
+	 * Get platform
+	 *
+	 * @return string "Android", "Chrome OS", "Chromium OS", "iOS", "Linux", "macOS", "Windows", or "Unknown"
+	 */
+	protected function getRequestPlatform() {
+		switch ( PHP_OS ) {
+			case "WINNT":
+			case "Windows_NT":
+			case "CYGWIN_NT-5.1":
+			case "CYGWIN_NT-6.1":
+			case "CYGWIN_NT-6.1-WOW64":
+			case "CYGWIN_NT-10.0":
+			case "MINGW32_NT-6.1":
+			case "MINGW64_NT-6.1":
+			case "MSYS_NT-6.1":
+			case "MSYS_NT-6.1":
+			case "MS-DOS":
+			case "WindowsNT":
+			case "UWIN-W7":
+				return "Windows";
+			case "GNU":
+			case "GNU/kFreeBSD":
+			case "DragonFly":
+			case "Linux":
+			case "FreeBSD":
+			case "HP-UX":
+			case "AIX":
+			case "Interix":
+			case "IRIX":
+			case "IRIX64":
+			case "MidnightBSD":
+			case "Minix":
+			case "NetBSD":
+			case "OpenBSD":
+			case "QNX":
+			case "ReliantUNIX-Y":
+			case "SINIX-Y":
+			case "SunOS":
+			case "OSF1":
+			case "ULTRIX":
+			case "SCO_SV":
+			case "TrueNAS":
+			case "FreeNAS":
+			case "UnixWare":
+				return "Linux";
+			case "Darwin":
+				return "macOS";
+			default:
+				return "Unknown";
+		}
 	}
 
 	/**
@@ -580,8 +647,7 @@ class CheckIfDead {
 		if ( $this->isOnion( $url ) && !self::$torEnabled ) {
 			return "UNSUPPORTED";
 		}
-
-		switch( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
+		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 			case "ftp":
 				return "FTP";
 			case "mms":
@@ -589,8 +655,9 @@ class CheckIfDead {
 			case "rtsp":
 				return "RTSP";
 			case "http":
-			case "https":
 				return "HTTP";
+			case "https":
+				return "HTTPS";
 			case "":
 				return "BAD URL";
 			default:
@@ -606,7 +673,6 @@ class CheckIfDead {
 	 */
 	protected function isOnion( $url ) {
 		$domain = strtolower( parse_url( $url, PHP_URL_HOST ) );
-
 		if ( substr( $domain, -6 ) == ".onion" ) {
 			return true;
 		} else {
@@ -621,7 +687,7 @@ class CheckIfDead {
 	 * @param bool $full Was this a request for the full page?
 	 * @return bool|null Returns true if dead, false if alive, null if uncertain
 	 */
-	protected function processCurlResults( $curlInfo, $full = false ) {
+	protected function processCurlResults( $curlInfo, $full = false, $httpVersion = CURL_HTTP_VERSION_NONE ) {
 		// Determine if we are using FTP or HTTP
 		$requestType = $this->getRequestType( $curlInfo['url'] );
 		// Get HTTP code returned
@@ -632,6 +698,8 @@ class CheckIfDead {
 		$effectiveUrlClean = $this->cleanURL( $effectiveUrl );
 		// Get an array of possible root urls
 		$possibleRoots = $this->getDomainRoots( $curlInfo['url'] );
+		// Let's check and see if we are HTTP version mismatched
+		$httpVersionMismatch = $httpVersion != $curlInfo['http_version'];
 		if ( $httpCode >= 400 && $httpCode < 600 ) {
 			if ( $full ) {
 				$this->errors[$curlInfo['rawurl']] = "RESPONSE CODE: $httpCode";
@@ -665,8 +733,8 @@ class CheckIfDead {
 				// We found a match with final url and a possible root url
 				if ( $root == $effectiveUrlClean ) {
 					$this->errors[$curlInfo['rawurl']] = "REDIRECT TO ROOT";
-
-					return true;
+					if ( !$httpVersionMismatch && !$full ) return true;
+					else return null;
 				}
 			}
 		}
@@ -683,11 +751,11 @@ class CheckIfDead {
 				$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER";
 				$this->errors[$curlInfo['rawurl']] .= " - Curl Error {$curlInfo['curl_error']}: {$curlInfo['curl_error_msg']}";
 				$this->errors[$curlInfo['rawurl']] .= " - Failed after {$curlInfo['exec_time']} us";
-
-				if( $curlInfo['exec_time'] >= 1000 ) {
+				if ( $curlInfo['exec_time'] >= 1000 ) {
 					return true;
 				} else {
 					$this->errors[$curlInfo['rawurl']] = "NO RESPONSE FROM SERVER - POTENTIAL FALSE POSITIVE";
+
 					return null;
 				}
 			} else {
@@ -699,13 +767,13 @@ class CheckIfDead {
 		// Check for valid non-error codes for HTTP or FTP
 		if ( $requestType != "FTP" && !in_array( $httpCode, $this->goodHttpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "HTTP RESPONSE CODE: $httpCode";
-
-			return true;
+			if ( !$httpVersionMismatch && !$full ) return true;
+			else return null;
 			// Check for valid non-error codes for FTP
 		} elseif ( $requestType == "FTP" && !in_array( $httpCode, $this->goodFtpCodes ) ) {
 			$this->errors[$curlInfo['rawurl']] = "FTP RESPONSE CODE: $httpCode";
-
-			return true;
+			if ( !$httpVersionMismatch && !$full ) return true;
+			else return null;
 		}
 
 		// Yay, the checks passed, and the site is alive.
@@ -758,13 +826,12 @@ class CheckIfDead {
 		// Some rare URLs don't like it when %20 is passed in the query and require the +.
 		// %20 is the most common usage to represent a whitespace in the query.
 		// So convert them to unique values that will survive the encoding/decoding process.
-		if( $parts === false ) return false;
-
-		if( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
+		if ( $parts === false ) return false;
+		if ( $preserveQueryEncoding === true && isset( $parts['query'] ) ) {
 			$parts['query'] = str_replace( "%20", "CHECKIFDEADHEXSPACE", $parts['query'] );
 		}
 		// In case the protocol is missing, assume it goes to HTTPS
-		if( !isset( $parts['scheme'] ) ) {
+		if ( !isset( $parts['scheme'] ) ) {
 			$url = "https";
 		} else {
 			$url = strtolower( $parts['scheme'] );
