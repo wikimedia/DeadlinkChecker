@@ -1,5 +1,4 @@
 <?php
-
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use Wikimedia\DeadlinkChecker\CheckIfDead;
@@ -24,12 +23,20 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 
 		// @codingStandardsIgnoreStart Line exceeds 100 characters
 		$tests = [
+			//[ 'http://mil.sagepub.com/content/17/2/227.short', false ],   // CloudFlare protection is preventing this URL from passing
+			[ 'https://www.mobilitaet.bs.ch/gesamtverkehr/verkehrskonzepte/verkehrskonzept-innenstadt.html', false ],
+			[ 'http://www.twirpx.com/file/1775048/', false ],
+			[ 'https://ergebnisse2011.zensus2022.de/datenbank//online?operation=table&code=1000A-1008', false ],
+			[ 'https://www.statistik.bs.ch/zahlen/tabellen/1-bevoelkerung/religionszugehoerigkeit.html', false ],
+			[ 'https://www.archaeologie.bs.ch/vermitteln/archaeologische-publikationen.html', false ],
+			[ 'https://www.gleichstellung.bs.ch/veranstaltungen/2019-oktober-luststreifen.html', false ],
+			[ 'https://www.hs.fi/lehti/hsarchive/1970-01-08/14', false ],
 			[ 'https://en.wikipedia.org', false ],
 			[ '//en.wikipedia.org/wiki/Main_Page', false ],
 			[ 'https://en.wikipedia.org/w/index.php?title=Republic_of_India', false ],
-			[ 'ftp://ftp.rsa.com/pub/pkcs/ascii/layman.asc', false ],
+			[ 'ftp://ftp.cnpq.br/pub/doc/proantar/pab-12.pdf', false ],
 			[ 'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2/release/1173051', false ],
-			// [ 'https://astraldynamics.com', false ],
+			[ 'https://astraldynamics.com', false ],
 			[
 				'http://napavalleyregister.com/news/napa-pipe-plant-loads-its-final-rail-car/article_695e3e0a-8d33-5e3b-917c-07a7545b3594.html',
 				false
@@ -42,10 +49,9 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'https://en.wikipedia.org/w/index.php?title=Wikipedia:Templates_for_discussion/Holding%20cell&action=edit',
 				false
 			],
-			[ 'http://hei.hankyung.com/news/app/newsview.php?aid=2011080869717', false ],
 			[ 'http://www.musicvf.com/Buck+Owens+%2526+Ringo+Starr.art', false ],
 			[ 'http://www.beweb.chiesacattolica.it/diocesi/diocesi/503/Aosta', false ],
-			// [ 'http://www.dioceseoflascruces.org/', false ],
+			[ 'http://www.dioceseoflascruces.org/', false ],
 			[ 'http://www.worcesterdiocese.org/', false ],
 			[ 'http://www.catholicdos.org/', false ],
 			[ 'http://www.diocesitivoli.it/', false ],
@@ -53,6 +59,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http://www.saginaw.org/', false ],
 			[ 'http://www.dioceseofprovidence.org/', false ],
 			[ 'http://www.rcdop.org.uk/', false ],
+			[ 'mms://ier-w.latvijasradio.lv/pppy?20121202A121500130000', false ],
 			[ 'mms://200.23.59.10/radiotam', true ],
 			[ 'http://babel.hathitrust.org/cgi/pt?id=pst.000003356951;view=1up;seq=1', false ],
 			[ 'http://parlinfo.aph.gov.au/parlInfo/search/display/display.w3p;query=Id%3A%22handbook%2Fnewhandbook%2F2014-10-31%2F0049%22', false ],
@@ -60,7 +67,6 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 				'https://www.google.se/maps/@60.0254617,14.9787602,3a,75y,133.6h,84.1t/data=!3m6!1e1!3m4!1sqMn_R4TRF0CerotZfLlg8g!2e0!7i13312!8i6656',
 				false
 			],
-
 			[ 'https://en.wikipedia.org/nothing', true ],
 			[ '//en.wikipedia.org/nothing', true ],
 			[ 'http://worldchiropracticalliance.org/resources/greens/green4.htm', true ],
@@ -77,13 +83,11 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 		];
 		// @codingStandardsIgnoreEnd
 		if ( function_exists( 'idn_to_ascii' ) ) {
-			$tests[] = [ 'http://кц.рф/ru/', false ];
+			$tests[] = [ 'https://www.xn--80apbllt6f.xn--p1ai/', false ];
 		}
-
 		if ( CheckIfDead::isTorEnabled() ) {
-			$tests[] = [ 'http://xmh57jrzrnw6insl.onion/', false ];
-			$tests[] = [ 'https://3g2upl4pq6kufc4m.onion/', false ];
-			$tests[] = [ 'https://3g2upl4pq6kufc4n.onion/', true ];
+			$tests[] = [ 'http://wiki2zkamfya6mnyvk4aom4yjyi2kwsz7et3e4wnikcrypqv63rsskid.onion/', false ];
+			$tests[] = [ 'http://donionsixbjtiohce24abfgsffo2l4tk26qx464zylumgejukfq2vead.onion/onions.php', false ];
 			$tests[] = [ 'http://xmhqwe3rnw6insl.onion/', true ];
 		}
 
@@ -163,7 +167,7 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[ 'http%3A//www%2Eatimes%2Ecom/atimes/Middle_East/FH13Ak05%2Ehtml',
 				'http://www.atimes.com/atimes/Middle_East/FH13Ak05.html' ],
 			[ 'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping',
-				'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping'],
+				'http://www.eurostar.se/html/bokning.php?ort=Falk%F6ping' ],
 			[ 'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907#YqFdqg6Pj8MAAAFCbEWeJA/67',
 				'http://www.silvercityvault.org.uk/index.php?a=ViewItem&key=SHsiRCI6IlN1YmplY3QgPSBcIkJyaWRnZXNcIiIsIk4iOjUyLCJQIjp7InN1YmplY3RfaWQiOiIyMCIsImpvaW5fb3AiOjJ9fQ%3D%3D&pg=8&WINID=1384795972907' ],
 			[ 'http://example.com/blue+light%20blue?blue%2Blight+blue%23foobar#foobar',
@@ -199,15 +203,15 @@ class CheckIfDeadTest extends PHPUnit_Framework_TestCase {
 			[
 				'http://кц.рф/ru/', [
 				'scheme' => 'http',
-				'host'   => 'кц.рф',
-				'path'   => '/ru/',
+				'host' => 'кц.рф',
+				'path' => '/ru/',
 			]
 			],
 			[
 				'http://www.discogs.com/Various-Kad-Jeknu-Dragačevske-Trube-2', [
 				'scheme' => 'http',
-				'host'   => 'www.discogs.com',
-				'path'   => '/Various-Kad-Jeknu-Dragačevske-Trube-2',
+				'host' => 'www.discogs.com',
+				'path' => '/Various-Kad-Jeknu-Dragačevske-Trube-2',
 			]
 			],
 		];
