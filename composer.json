@@ -31,8 +31,9 @@
   "require": {
     "ext-curl": "*",
     "ext-intl": "*",
-    "lib-curl": ">=7.15.1",
-    "php": ">=7.0.0"
+    "lib-curl": ">=7.43.0",
+    "php": ">=7.3.0",
+    "chrome-php/chrome": ">=v1.7.0"
   },
   "require-dev": {
     "jakub-onderka/php-parallel-lint": "~0.8",

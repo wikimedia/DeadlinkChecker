@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.3.4' );
+define( 'CHECKIFDEADVERSION', '2.0' );
 
 class CheckIfDead {
 
@@ -520,12 +520,7 @@ class CheckIfDead {
 					'Pragma: '
 				];
 			} elseif ( in_array( $httpVersion, [ CURL_HTTP_VERSION_2, CURL_HTTP_VERSION_2_0, CURL_HTTP_VERSION_2_PRIOR_KNOWLEDGE, CURL_HTTP_VERSION_2TLS ] ) ) {
-				$parsedURL = $this->parseURL( $url );
 				$header = [
-					//'authority: ' . $parsedURL['host'],
-					//':method: get',
-					//':path: ' . $parsedURL['path'],
-					//':scheme: ' . strtolower( $parsedURL['scheme'] ),
 					// @codingStandardsIgnoreStart Line exceeds 100 characters
 					'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
 					// @codingStandardsIgnoreEnd
@@ -918,7 +913,7 @@ class CheckIfDead {
 			// There are legal characters that do not need encoding in the query
 			// and some webservers cannot handle these being encoded
 			// If we only have legal characters, we can skip sanitizing the query
-			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\(\)\,\~\:\[\]\@\;\&\=\%]/';
+			$legalRegex = '/[^0-9a-zA-Z$\-\_\.\+\!\*\(\)\,\~\:\[\]\@\;\&\=\%\/]/';
 			if ( preg_match( $legalRegex, $parts['query'] ) ) {
 				// Encoding the + means a literal plus in the query.
 				// A plus means a space otherwise.
