@@ -13,6 +13,13 @@ This is a PHP library for detecting whether URLs on the internet are alive or de
 * Concurrently checks batch of URLs for efficiency
 
 <!--[![Build Status](https://travis-ci.org/wikimedia/DeadlinkChecker.svg?branch=master)](https://travis-ci.org/wikimedia/DeadlinkChecker)-->
+### Overview
+The checkIfDead library is a PHP library designed for assessing the status of URLs on the web and dark web.  It operates by taking one or more URLs as inputs and concurrently checks them, to enhance response times.
+
+It can handle both properly and improperly formatted URLs and performs basic sanity checking and error correction on malformed inputs.  All inputs are normalized through the sanitizer to ensure the curl library communicates properly with the target.
+
+When left at defaults, the library will emulate a web browser request and follow redirects to its destination.
+
 ### Installation
 Using composer:
 Add the following to the composer.json file for your project:
