@@ -68,5 +68,40 @@ You can control how long it takes before page requests timeout by passing parame
 $deadLinkChecker = new checkIfDead( 10, 20 );
 ```
 
+In addition to controlling query timeouts, a custom user agent can be passed to the library as well like so:
+```angular2html
+$deadLinkChecker = new checkIfDead( 10, 20, "Custom Agent" );
+```
+
+By default, multiple URLs of the same domain are queued sequentially to be respectul to the hosts.  However, this can be disabled so all URLs are queried concurrently as follows:
+```angular2html
+$deadLinkChecker = new checkIfDead( 10, 20, "Custom Agent", false );
+```
+
+You can increase the verbosity of the output to follow what the library is doing as it's doing it.
+```angular2html
+$deadLinkChecker = new checkIfDead( 10, 20, "Custom Agent", true, true );
+```
+
+Finally, because the library supports TOR requests, the environment will need a working SOCKS5 proxy to make the requests.  The library looks for the SOCKS5 proxy using system defaults, but the proxy can be specified manually.
+```angular2html
+$deadLinkChecker = new checkIfDead( 10, 20, "Custom Agent", true, false, "proxy.host", proxy_port );
+```
+
+### Getting details about the last batch of URLs checked
+After a batch of URLs have been checked, you can use ```$deadLinkChecker->getErrors()``` to get the curl errors encountered during the process, and ```$deadLinkChecker->getRequestDetails()``` to get the curl request details of all URLs checked in the last batch.
+
+### Other functions
+To clean up dirty URLs and allow them to be normalized to correctly line with varying HTTP clients:
+```angular2html
+$deadLinkChecker->sanitizeURL( "https://example.com/", $stripFragment );
+```
+By default, $stripFragment is false.  When set to true, URL fragments are dropped.
+
+Because PHP has a tendency to fail parsing URLs containing UTF-8 characters, you can use the library's parseURL method.
+```angular2html
+$deadLinkChecker->parseURL( $url );
+```
+
 ### License
 This code is distributed under [GNU GPLv3+](https://www.gnu.org/copyleft/gpl.html)
