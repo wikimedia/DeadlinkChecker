@@ -7,7 +7,7 @@
 
 namespace Wikimedia\DeadlinkChecker;
 
-define( 'CHECKIFDEADVERSION', '1.8.3.5' );
+define( 'CHECKIFDEADVERSION', '1.8.3.6' );
 
 class CheckIfDead {
 
@@ -920,7 +920,7 @@ class CheckIfDead {
 				$parts['query'] = str_replace( "+", "CHECKIFDEADPLUSSPACE", $parts['query'] );
 				// We have a query string, all queries start with a ?
 				// Break apart the query string.  Separate them into all of the arguments passed.
-				$parts['query'] = explode( '&', $parts['query'] );
+				$parts['query'] = preg_split('/[&;]/', $parts['query']);
 				// We need to encode each argument
 				foreach ( $parts['query'] as $index => $argument ) {
 					// Make sure we don't inadvertently encode the first instance of "="
