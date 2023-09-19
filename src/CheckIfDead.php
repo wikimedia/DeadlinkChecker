@@ -136,21 +136,48 @@ class CheckIfDead {
 		$this->customUserAgent = $userAgent;
 		$this->queuedTesting = (bool)$sequentialTests;
 		$this->verbose = (bool)$verbose;
+
+		self::$socks5Host = $socks5Host;
+		if ( $socks5Port === false ) {
+			// If we are using TOR defaults, check OS to determine which defaults to use.
+			if ( substr( php_uname(), 0, 7 ) == "Windows" ) {
+				self::$socks5Port = 9150;
+			} else {
+				self::$socks5Port = 9050;
+			}
+		} else {
+			self::$socks5Port = $socks5Port;
+		}
+	}
+
+	/**
+	 * Check if a single URL is dead by performing a curl request
+	 *
+	 * @param string $url URL to check
+	 * @return bool|null Returns null if curl is unable to initialize.
+	 *     Otherwise returns true (dead) or false (alive).
+	 */
+	public function isLinkDead( $url ) {
+		$deadVal = $this->areLinksDead( [ $url ] );
+		$deadVal = $deadVal[$url];
+
+		return $deadVal;
+	}
+
+	/**
+	 * Check an array of links
+	 *
+	 * @param array $urls Array of URLs we are checking
+	 * @return array|null Returns null if curl is unable to initialize.
+	 *     Otherwise returns an array in which each key is a URL and each value is
+	 *     true (dead) or false (alive).
+	 */
+	public function areLinksDead( $urls ) {
+		// Run TOR check if not yet initialized
 		if ( is_null( self::$torEnabled ) ) {
 			// Check to see if we have an environment that supports TOR
 			if ( $this->verbose ) {
 				echo "Testing for TOR readiness...";
-			}
-			self::$socks5Host = $socks5Host;
-			if ( $socks5Port === false ) {
-				// If we are using TOR defaults, check OS to determine which defaults to use.
-				if ( substr( php_uname(), 0, 7 ) == "Windows" ) {
-					self::$socks5Port = 9150;
-				} else {
-					self::$socks5Port = 9050;
-				}
-			} else {
-				self::$socks5Port = $socks5Port;
 			}
 			$testURL = "https://check.torproject.org";
 			// Prepare test
@@ -186,31 +213,7 @@ class CheckIfDead {
 				}
 			}
 		}
-	}
 
-	/**
-	 * Check if a single URL is dead by performing a curl request
-	 *
-	 * @param string $url URL to check
-	 * @return bool|null Returns null if curl is unable to initialize.
-	 *     Otherwise returns true (dead) or false (alive).
-	 */
-	public function isLinkDead( $url ) {
-		$deadVal = $this->areLinksDead( [ $url ] );
-		$deadVal = $deadVal[$url];
-
-		return $deadVal;
-	}
-
-	/**
-	 * Check an array of links
-	 *
-	 * @param array $urls Array of URLs we are checking
-	 * @return array|null Returns null if curl is unable to initialize.
-	 *     Otherwise returns an array in which each key is a URL and each value is
-	 *     true (dead) or false (alive).
-	 */
-	public function areLinksDead( $urls ) {
 		// Create multiple curl handle
 		$this->errors = [];
 		$this->details = [];
@@ -459,7 +462,10 @@ class CheckIfDead {
 		}
 		foreach ( $urls as $url ) {
 			$parsedParts = $this->parseURL( $url );
-			if ( $parsedParts === false ) $parsedParts['host'] = "empty";
+			if ( $parsedParts === false ) {
+				$parsedParts = [];
+				$parsedParts['host'] = "empty";
+			}
 			$domain = $parsedParts['host'];
 			$queuedUrl = false;
 			$queueIndex = -1;
@@ -642,6 +648,11 @@ class CheckIfDead {
 		if ( $this->isOnion( $url ) && !self::$torEnabled ) {
 			return "UNSUPPORTED";
 		}
+
+		if ( $url === false ) {
+			return "BAD URL";
+		}
+
 		switch ( strtolower( parse_url( $url, PHP_URL_SCHEME ) ) ) {
 			case "ftp":
 				return "FTP";
@@ -667,6 +678,10 @@ class CheckIfDead {
 	 * @return bool True if it's an Onion URL
 	 */
 	protected function isOnion( $url ) {
+		if ( $url === false ) {
+			return false;
+		}
+
 		$domain = strtolower( parse_url( $url, PHP_URL_HOST ) );
 		if ( substr( $domain, -6 ) == ".onion" ) {
 			return true;

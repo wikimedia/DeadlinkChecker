@@ -32,13 +32,12 @@
     "ext-curl": "*",
     "ext-intl": "*",
     "lib-curl": ">=7.43.0",
-    "php": ">=7.3.0",
-    "chrome-php/chrome": ">=v1.7.0"
+    "php": ">=7.3.0"
   },
   "require-dev": {
-    "jakub-onderka/php-parallel-lint": "~0.8",
-    "mediawiki/mediawiki-codesniffer": "0.7.2",
-    "phpunit/phpunit": "~4.8|~5.0"
+    "jakub-onderka/php-parallel-lint": "v1.0.0",
+    "mediawiki/mediawiki-codesniffer": "v39.0.0",
+    "phpunit/phpunit": "^9.6"
   },
   "scripts": {
     "fix": "phpcbf",
